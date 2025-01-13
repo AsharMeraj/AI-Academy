@@ -12,7 +12,7 @@ import {
 import { ChevronDown, ChevronUp } from 'lucide-react'
 
 
-const page = () => {
+const QuestionAnswers = () => {
   const { courseId } = useParams()
   const [stepCount, setStepCount] = useState<number>(0)
   const [qaResult, setQaResult] = useState<QaResultType[]>([])
@@ -85,4 +85,4 @@ const page = () => {
   )
 }
 
-export default page
+export default QuestionAnswers

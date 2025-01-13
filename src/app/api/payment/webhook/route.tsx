@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-export async function POST(req: Request, res: Response): Promise<Response> {
+export async function POST(req: Request): Promise<Response> {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
   const webhookSecret = process.env.STRIPE_WEB_HOOK_KEY as string;
   const signature = req.headers.get("stripe-signature") as string;

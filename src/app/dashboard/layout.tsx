@@ -1,8 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import Sidebar from './_components/Sidebar';
 import DashboardHeader from './_components/DashboardHeader';
-import { CourseCountContext } from '../_context/CourseCountContext';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (

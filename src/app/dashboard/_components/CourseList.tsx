@@ -14,14 +14,14 @@ const CourseList = () => {
     const [courseList, setCourseList] = useState<result[]>([])
     const [loading, setLoading] = useState<boolean>(false)
    
-    const {totalCourse, setTotalCourse} = useContext(CourseCountContext)
+    const {setTotalCourse} = useContext(CourseCountContext)
     
     const handleDelete = (id: string) => {
         setCourseList((prev) => prev.filter((course) => course.courseId !== id))
     }
 
     useEffect(() => {
-        user && GetCourseList()
+        GetCourseList()
     }, [user])
 
 

@@ -9,24 +9,27 @@ import Image from 'next/image'
 import React, { useContext, useEffect, useState } from 'react'
 
 const CourseIntroCard = ({ course }: { course: result }) => {
-  const { Result, setResult } = useContext(ResultDataContext)
+  const { Result } = useContext(ResultDataContext)
   const [progress, setProgress] = useState<number>(0)
   console.log(progress)
 
   useEffect(() => {
     const filledKeys = Object.values(Result).filter(value => value && value.length > 0).length;
     const totalKeys = Object.keys(Result).length;
-    
+
     const progressPercentage = (filledKeys / totalKeys) * 100;
 
     const UpdateProgress = async () => {
       await db.update(STUDY_MATERIAL_TABLE).set({
-        progress: progressPercentage?progressPercentage:0
+        progress: progressPercentage ? progressPercentage : 0
       }).where(eq(STUDY_MATERIAL_TABLE.courseId, course.courseId))
       const progressResult = await db.select().from(STUDY_MATERIAL_TABLE).where(eq(STUDY_MATERIAL_TABLE.courseId, course.courseId))
 
       console.log(progressResult[0]?.progress)
-      progressResult[0]?.progress&&setProgress(progressResult[0].progress)
+      if (progressResult[0]?.progress) {
+        setProgress(progressResult[0]?.progress)
+      }
+
     }
 
     UpdateProgress()

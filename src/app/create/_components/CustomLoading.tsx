@@ -1,14 +1,14 @@
 import React from 'react'
 import {
     AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
+    // AlertDialogAction,
+    // AlertDialogCancel,
     AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
+    // AlertDialogDescription,
+    // AlertDialogFooter,
+    // AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
+    // AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import Image from 'next/image'
 

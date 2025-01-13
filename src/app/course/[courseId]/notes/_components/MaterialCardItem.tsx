@@ -60,7 +60,7 @@ const MaterialCardItem = (props: PropType) => {
     props.course.courseLayout.chapters.forEach(chapter => {
       chapters = chapter.chapterTitle + "," + chapters
     })
-    const result = await axios.post('/api/study-type-content', {
+    await axios.post('/api/study-type-content', {
       courseId: props.course.courseId,
       type: props.item.type,
       chapters: chapters

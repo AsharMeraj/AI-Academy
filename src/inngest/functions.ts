@@ -1,9 +1,8 @@
-import { useUser } from "@clerk/nextjs";
 import { inngest } from "./client";
 import { CHAPTER_NOTES_TABLE, STUDY_MATERIAL_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
 import { db } from "@/configs/db";
-import { and, eq } from "drizzle-orm";
-import { Chapter, result, StudyMaterial } from "@/app/_types/Types";
+import { eq } from "drizzle-orm";
+import { result } from "@/app/_types/Types";
 import { generateFlashCardsAiModel, generateNotesAiModel, generateQaAiModel, generateQuizAiModel } from "@/configs/AiModel";
 
 export const helloWorld = inngest.createFunction(
@@ -21,7 +20,7 @@ export const CreateNewUser = inngest.createFunction(
   { event: 'user.create' },
   async ({ event, step }) => {
     const { user } = event.data
-    const result = await step.run('Check use and create new if not', async () => {
+    await step.run('Check use and create new if not', async () => {
       if (user?.primaryEmailAddress?.emailAddress && user.fullName) {
 
         const result = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, user?.primaryEmailAddress?.emailAddress))
@@ -55,26 +54,8 @@ export const GenerateNotes = inngest.createFunction(
 
     // Generate Notes with each chapter with AI
 
-    const notesResult = await step.run('Generate Chapter Notes', async () => {
+    await step.run('Generate Chapter Notes', async () => {
       let index = 0
-      //       course.courseLayout.chapters.forEach(async (chapter) => {
-      //         console.log(chapter)
-      //         const PROMPT =
-      //           `Generate fully detailed exam material content for each chapters. The result should have an object with just one field "content" as key value pair, and in it, it should have all the content in string format with HTML styled using inline CSS. Ensure all text is left-aligned for readability. Style main heading with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;, subheadings with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0; and subheading's subheadings with color: black; and paragraphs with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem; for better readability. For coding topics, use responsive containers (in every subheading) styled with background-color: #f3f4f6; padding: 1.5; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 0;, ensuring horizontal scrollbars for responsiveness and a consistent background color. Maintain clean, mobile-friendly layouts with generous spacing using margin-bottom: 1.5rem; margin-top: 1.5rem; between sections. Exclude <html>, <head>, <body>, and <title> tags. Result should be in json format. (Use max 1000 tokens). Use these chapter details:${JSON.stringify(chapter)}.
-      // `
-
-      //         const result = await generateNotesAiModel.sendMessage(PROMPT)
-      //         const aiResp = JSON.parse(result.response.text())
-      //         console.log(aiResp)
-
-      //         await db.insert(CHAPTER_NOTES_TABLE).values({
-      //           chapterId: index,
-      //           courseId: course.courseId,
-      //           notes: aiResp,
-      //           status: "Ready"
-      //         })
-      //         index = index + 1
-      //       })
       let chapter = ['']
       course.courseLayout.chapters.map((chap, index) => {
         chapter.push(JSON.stringify(chap))
@@ -107,8 +88,8 @@ export const GenerateNotes = inngest.createFunction(
       return "Completed!"
     })
 
-    const updateStudyMaterialResult = await step.run('Update course status to ready', async () => {
-      const result = db.update(STUDY_MATERIAL_TABLE).set({
+    await step.run('Update course status to ready', async () => {
+      db.update(STUDY_MATERIAL_TABLE).set({
         status: 'Ready'
       }).where(eq(STUDY_MATERIAL_TABLE.courseId, course.courseId))
     })
@@ -121,7 +102,7 @@ export const GenerateStudyTypeContent = inngest.createFunction(
   { event: 'studyType.content' },
 
   async ({ event, step }) => {
-    const { studyType, prompt, courseId, recordId } = event.data
+    const { studyType, prompt, recordId } = event.data
 
 
       const AiResult = await step.run('Generating flashcard using Ai', async () => {
@@ -132,8 +113,8 @@ export const GenerateStudyTypeContent = inngest.createFunction(
 
     // Save the Result
 
-    const DbResult = await step.run('Save Result to DB', async () => {
-      const result = await db.update(STUDY_TYPE_CONTENT_TABLE).set({
+    await step.run('Save Result to DB', async () => {
+      await db.update(STUDY_TYPE_CONTENT_TABLE).set({
         content: AiResult,
         status: 'Ready',
       }).where(eq(STUDY_TYPE_CONTENT_TABLE.id, recordId))

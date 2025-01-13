@@ -1,5 +1,5 @@
 'use client'
-import React, { useContext, useState } from 'react'
+import React, { useState } from 'react'
 import { CourseCountContext } from './_context/CourseCountContext'
 
 const ContextWrapper = ({ children }: { children: React.ReactNode }) => {

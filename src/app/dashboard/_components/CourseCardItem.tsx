@@ -21,7 +21,9 @@ const CourseCardItem = ({ course, onDelete }: { course: result, onDelete: (id: s
   const UpdateProgress = async () => {
     const result = await db.select().from(STUDY_MATERIAL_TABLE).where(eq(STUDY_MATERIAL_TABLE.courseId, course.courseId))
 
-    result[0]?.progress && setProgress(result[0].progress)
+    if (result[0]?.progress) {
+      setProgress(result[0].progress)
+    }
 
 
   }
