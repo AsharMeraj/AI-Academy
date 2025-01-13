@@ -34,7 +34,7 @@ const Create = () => {
         setLoading(true)
         const courseId = uuidv4()
         if (user?.primaryEmailAddress?.emailAddress) {
-            const result = await axios.post('/api/generate-course-outline', {
+            await axios.post('/api/generate-course-outline', {
                 courseId: courseId,
                 ...formData,
                 createdBy: user.primaryEmailAddress.emailAddress

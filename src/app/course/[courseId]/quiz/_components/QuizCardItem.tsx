@@ -1,5 +1,4 @@
 import { QuizData } from '@/app/_types/Types'
-import { Button } from '@/components/ui/button'
 import React, { useState } from 'react'
 
 const QuizCardItem = ({ quiz, checkAnswer }: { quiz: QuizData, checkAnswer: (option: string, correctAnswer: string) => void }) => {

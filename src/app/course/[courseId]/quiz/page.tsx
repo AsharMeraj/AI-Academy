@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import QuizCardItem from './_components/QuizCardItem'
 
-const page = () => {
+const QuizPage = () => {
   const { courseId } = useParams()
   const [quizData, setQuizData] = useState<QuizDataType>(Object)
   const [stepCount, setStepCount] = useState<number>(0)
@@ -95,4 +95,4 @@ const page = () => {
   )
 }
 
-export default page
+export default QuizPage

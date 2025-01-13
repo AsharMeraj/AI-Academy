@@ -14,7 +14,7 @@ const Pricing = () => {
     const [userDetail, setUserDetail] = useState<UserType>({} as UserType)
     const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
-        user && GetUserDetail()
+        GetUserDetail()
     }, [user])
     const GetUserDetail = async () => {
         if (user?.primaryEmailAddress?.emailAddress) {

@@ -16,9 +16,9 @@ const StudyMaterialSection = ({ course }: { course: result }) => {
 
     const { Result, setResult } = context
 
-    const handleDelete = (data: NotesResult) => {
-        setStudyTypeContent((prev) => ({ ...prev, data }));
-    };
+    // const handleDelete = (data: NotesResult) => {
+    //     setStudyTypeContent((prev) => ({ ...prev, data }));
+    // };
 
     const materialList = [
         {
