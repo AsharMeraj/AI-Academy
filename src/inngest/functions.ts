@@ -55,9 +55,9 @@ export const GenerateNotes = inngest.createFunction(
     // Generate Notes with each chapter with AI
 
     await step.run('Generate Chapter Notes', async () => {
-      let index = 0
-      let chapter = ['']
-      course.courseLayout.chapters.map((chap, index) => {
+      const index = 0
+      const chapter = ['']
+      course.courseLayout.chapters.map((chap) => {
         chapter.push(JSON.stringify(chap))
       })
 
@@ -105,11 +105,11 @@ export const GenerateStudyTypeContent = inngest.createFunction(
     const { studyType, prompt, recordId } = event.data
 
 
-      const AiResult = await step.run('Generating flashcard using Ai', async () => {
-        const result = studyType === 'flashcard'? await generateFlashCardsAiModel.sendMessage(prompt) : studyType === 'quiz'? await generateQuizAiModel.sendMessage(prompt) : await generateQaAiModel.sendMessage(prompt)
-        const AIResult = JSON.parse(result.response.text())
-        return AIResult
-      })
+    const AiResult = await step.run('Generating flashcard using Ai', async () => {
+      const result = studyType === 'flashcard' ? await generateFlashCardsAiModel.sendMessage(prompt) : studyType === 'quiz' ? await generateQuizAiModel.sendMessage(prompt) : await generateQaAiModel.sendMessage(prompt)
+      const AIResult = JSON.parse(result.response.text())
+      return AIResult
+    })
 
     // Save the Result
 
