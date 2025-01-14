@@ -65,7 +65,7 @@ const Flashcards = () => {
       <div className='mt-10'>
         <Carousel setApi={setApi}>
           <CarouselContent>
-            {flashcardData[0]?.content.map((flashcard, index) => (
+            {flashcardData[0]?.content?.map((flashcard, index) => (
               <CarouselItem key={index} className='flex items-center justify-center'>
                 <FlashcardItems flashcard={flashcard} isFlipped={isFlipped} handleClick={handleClick} />
               </CarouselItem>
