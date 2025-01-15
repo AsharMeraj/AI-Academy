@@ -1,11 +1,9 @@
 import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
-import { CreateNewUser, GenerateNotes, GenerateStudyTypeContent, helloWorld } from "@/inngest/functions";
-export const runtime = 'edge'
+import { CreateNewUser, GenerateNotes, GenerateStudyTypeContent, helloWorld } from "@/inngest/functions"; 
 // Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  streaming: 'allow',
   functions: [
     helloWorld,
     CreateNewUser,
