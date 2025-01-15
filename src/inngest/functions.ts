@@ -55,7 +55,7 @@ export const GenerateNotes = inngest.createFunction(
     // Generate Notes with each chapter with AI
 
     await step.run('Generate Chapter Notes', async () => {
-      let index = 0
+      const index = 0
       const chapter = ['']
       course.courseLayout.chapters.map((chap) => {
         chapter.push(JSON.stringify(chap))
@@ -82,8 +82,6 @@ export const GenerateNotes = inngest.createFunction(
         notes: aiResp,
         status: "Ready"
       })
-
-      index = index + 1
 
 
 
