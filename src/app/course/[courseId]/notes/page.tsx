@@ -1,10 +1,7 @@
 'use client'
-import { NotesChapter, NotesType } from '@/app/_types/Types'
+import { NotesType } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
-import { db } from '@/configs/db'
-import { CHAPTER_NOTES_TABLE } from '@/configs/schema'
 import axios from 'axios'
-import { eq } from 'drizzle-orm'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
