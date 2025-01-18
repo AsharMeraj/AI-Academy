@@ -5,6 +5,7 @@ import { CreateNewUser, GenerateNotes, GenerateStudyTypeContent, helloWorld } fr
 export const runtime = 'edge'
 export const { GET, POST, PUT } = serve({
   client: inngest,
+  streaming: 'allow',
   functions: [
     helloWorld,
     CreateNewUser,
