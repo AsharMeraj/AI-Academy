@@ -1,13 +1,16 @@
 'use client'
-import { NotesChapter } from '@/app/_types/Types'
+import { NotesChapter, NotesType } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
+import { db } from '@/configs/db'
+import { CHAPTER_NOTES_TABLE } from '@/configs/schema'
 import axios from 'axios'
+import { eq } from 'drizzle-orm'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 const ViewNotes = () => {
     const { courseId } = useParams()
-    const [notes, setNotes] = useState<NotesChapter[][]>([])
+    const [notes, setNotes] = useState<NotesType[]>([])
     const [stepCount, setStepCount] = useState<number>(0)
     // Clean and parse deeply escaped JSON strings
     // const cleanedString = notes[stepCount] && JSON.parse(notes[stepCount])?.content
@@ -20,7 +23,6 @@ const ViewNotes = () => {
     // const parsedString = cleanedString ? JSON.parse(cleanedString) : null;
     // const actualNotes = parsedString;
 
-    console.log(notes)
 
     useEffect(() => {
         GetNotes()
@@ -33,9 +35,11 @@ const ViewNotes = () => {
                 studyType: 'notes'
             })
             setNotes(result.data.Notes)
+            console.log(result.data.Notes)
 
         }
     }
+    console.log(notes)
     return (
         <div>
             <div className='flex gap-5 items-center'>
@@ -48,11 +52,17 @@ const ViewNotes = () => {
                     size={'sm'}>
                     Previous
                 </Button>
-                {notes.map(item => item?.map((item, index) => (
-                    <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
+                {
+                    notes.map((note, index) => (
+                        <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
+                        </div>
+                    ))
+                }
 
-                    </div>
-                )))}
+                {/* <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
+                </div> */}
+
+
                 <Button
                     onClick={() => {
                         if (stepCount !== 2)
@@ -65,7 +75,7 @@ const ViewNotes = () => {
             </div>
 
             <div className='mt-10'>
-                <div dangerouslySetInnerHTML={{ __html: notes.map(item => item[stepCount]?.content) }} />
+                <div dangerouslySetInnerHTML={{ __html: notes[stepCount]?.notes[0]?.content }} />
             </div>
         </div>
     )

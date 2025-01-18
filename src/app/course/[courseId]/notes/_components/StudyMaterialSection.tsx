@@ -71,7 +71,7 @@ const StudyMaterialSection = ({ course }: { course: result }) => {
             } else {
                 console.warn('Result not found in the API response');
             }
-
+            console.log(data)
             setStudyTypeContent(data);
             console.log('Updated Result:', data.result);
         } catch (error) {

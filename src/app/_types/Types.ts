@@ -30,6 +30,14 @@ export interface NotesResult {
     result: Notes
 }
 
+export interface NotesType {
+    chapterId: number,
+    courseId: string,
+    id: number,
+    notes: NotesChapter[]
+    status: string,
+    type: string
+} 
 export interface Notes {
     notes: NotesChapter[],
     flashcard: flashCardAiResultType[],

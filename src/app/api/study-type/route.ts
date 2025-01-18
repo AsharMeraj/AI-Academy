@@ -17,9 +17,10 @@ export async function POST(req: Request){
         .where(eq(STUDY_TYPE_CONTENT_TABLE.courseId, courseId))
 
         console.log(contentList)
-        const Notes = notes.map(note => note.notes)
+
+        console.log("api Notes: " + notes[0]?.notes[0])
         const result = {
-            notes: Notes,
+            notes: notes,
             flashcard: contentList.filter(item=> item.type === 'flashcard'),
             quiz: contentList.filter(item=> item.type === 'quiz'),
             qa: contentList.filter(item=> item.type === 'qa')
@@ -29,9 +30,7 @@ export async function POST(req: Request){
     else if(studyType === 'notes'){
         const notes = await db.select().from(CHAPTER_NOTES_TABLE).where(eq(CHAPTER_NOTES_TABLE.courseId,courseId))
 
-        const Notes = notes.map(note => note.notes)
-
-        return NextResponse.json({Notes})
+        return NextResponse.json({Notes: notes})
     }
     else if(studyType === 'flashcard'){
         const flashcard = await db.select().from(STUDY_TYPE_CONTENT_TABLE).where(and(eq(STUDY_TYPE_CONTENT_TABLE.courseId,courseId),eq(STUDY_TYPE_CONTENT_TABLE.type, studyType)))
