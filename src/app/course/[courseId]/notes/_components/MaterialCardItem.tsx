@@ -175,11 +175,11 @@ const MaterialCardItem = (props: PropType) => {
         );
   
       console.log("Chapters Ready: " + result.length);
+      console.log("Chapter length: " + props.course.courseLayout.chapters.length)
   
       if (result.length < props.course.courseLayout.chapters.length) {
         // Continue polling after 2 seconds
         setTimeout(async () => {
-          await props.refreshData();
           checkNotes();
         }, 2000);
       } else {
