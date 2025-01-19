@@ -159,7 +159,7 @@ const MaterialCardItem = (props: PropType) => {
     if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
       checkNotes();
     }
-  });
+  },[props.studyTypeContent.notes.length, props.item.type]);
   
   const checkNotes = async () => {
       setLoading(true);
@@ -176,9 +176,7 @@ const MaterialCardItem = (props: PropType) => {
       console.log("Chapter length: " + props.course.courseLayout.chapters.length)
       if (result.length < props.course.courseLayout.chapters.length) {
         // Continue polling after 2 seconds
-        setTimeout(() => {
-          checkNotes();
-        }, 2000);
+        setTimeout(() => checkNotes(), 2000);
       } else {
         props.refreshData();
         setLoading(false);
