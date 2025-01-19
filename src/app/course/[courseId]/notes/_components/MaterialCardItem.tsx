@@ -156,7 +156,7 @@ const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course.courseLayout.chapters.length) {
+    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course?.courseLayout?.chapters?.length) {
       checkNotes();
     }
   }, []);
