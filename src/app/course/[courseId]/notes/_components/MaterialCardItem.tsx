@@ -183,8 +183,7 @@ const MaterialCardItem = (props: PropType) => {
           checkNotes();
         }, 2000);
       } else {
-        // Final refresh and stop loading
-        await props.refreshData();
+        props.refreshData();
         setLoading(false);
       }
     } catch (error) {
