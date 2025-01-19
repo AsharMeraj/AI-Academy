@@ -1,8 +1,8 @@
 import { inngest } from "./client";
-import { CHAPTER_NOTES_TABLE, STUDY_MATERIAL_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
+import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
 import { db } from "@/configs/db";
 import { eq } from "drizzle-orm";
-import { NotesType, result } from "@/app/_types/Types";
+import { NotesChapter, result } from "@/app/_types/Types";
 import { generateFlashCardsAiModel, generateNotesAiModel, generateQaAiModel, generateQuizAiModel } from "@/configs/AiModel";
 
 export const helloWorld = inngest.createFunction(
@@ -83,7 +83,7 @@ export const GenerateNotes = inngest.createFunction(
         .filter((data) => data !== null) as {
           chapterId: number;
           courseId: string;
-          notes: any;
+          notes: NotesChapter[];
           status: string;
         }[];
       console.log(chapterData)
