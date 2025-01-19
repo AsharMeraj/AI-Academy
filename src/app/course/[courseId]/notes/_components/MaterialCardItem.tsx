@@ -170,9 +170,11 @@ const MaterialCardItem = (props: PropType) => {
 
     console.log('Chapters Ready:', result.length);
     if (result.length === props.course.courseLayout.chapters.length) {
+      console.log('(if) Chapters Ready:', result.length);
       await props.refreshData();
       setLoading(false);
     } else {
+      console.log('(else) Chapters Ready:', result.length);
       setTimeout(checkNotes, 2000); // Avoid infinite loop, retry every 2 seconds
     }
   };
