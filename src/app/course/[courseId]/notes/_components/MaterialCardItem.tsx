@@ -159,6 +159,9 @@ const MaterialCardItem = (props: PropType) => {
     if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
       checkNotes();
     }
+    else {
+      props.refreshData()
+    }
   }, [props.item.type, props.studyTypeContent]);
 
   const checkNotes = async () => {
@@ -167,42 +170,40 @@ const MaterialCardItem = (props: PropType) => {
       .select()
       .from(CHAPTER_NOTES_TABLE)
       .where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId), eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
-
-    console.log('Chapters Ready:', result.length);
+  
     if (result.length === props.course.courseLayout.chapters.length) {
-      console.log('(if) Chapters Ready:', result.length);
       await props.refreshData();
       setLoading(false);
     } else {
-      console.log('(else) Chapters Ready:', result.length);
-      setTimeout(checkNotes, 2000); // Avoid infinite loop, retry every 2 seconds
+      setTimeout(checkNotes, 2000); // Retry after 2 seconds
     }
   };
+  
 
   const GenerateContent = async () => {
     setLoading(true);
     const chapters = props.course.courseLayout.chapters
       .map((chapter) => chapter.chapterTitle)
       .join(',');
-
+  
     try {
       await axios.post('/api/study-type-content', {
         courseId: props.course.courseId,
         type: props.item.type,
         chapters,
       });
-
+  
       const CheckStatus = async () => {
         try {
           const rows = await db
             .select()
             .from(STUDY_TYPE_CONTENT_TABLE)
             .where(and(eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId), eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')));
-
+  
           if (rows.length === 0) {
             setTimeout(CheckStatus, 2000); // Retry every 2 seconds
           } else {
-            await props.refreshData();
+            await props.refreshData(); // Ensure this updates the UI
             toast.success(`${props.item.type} Generated Successfully!`);
             setLoading(false);
           }
@@ -211,7 +212,7 @@ const MaterialCardItem = (props: PropType) => {
           setLoading(false);
         }
       };
-
+  
       CheckStatus();
     } catch (error) {
       console.error('Error generating content:', error);
@@ -219,6 +220,7 @@ const MaterialCardItem = (props: PropType) => {
       setLoading(false);
     }
   };
+  
 
   const checkResult = () => {
     return !props.studyTypeContent?.[props.item.type as keyof Notes]?.length;
