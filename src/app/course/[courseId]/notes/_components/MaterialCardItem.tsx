@@ -156,13 +156,12 @@ const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
+    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course.courseLayout.chapters.length) {
       checkNotes();
     }
-  }, [props.item.type, props.studyTypeContent]);
-
+  }, []);
+  
   const checkNotes = async () => {
-    try {
       setLoading(true);
       const result = await db
         .select()
@@ -173,23 +172,17 @@ const MaterialCardItem = (props: PropType) => {
             eq(CHAPTER_NOTES_TABLE.status, 'Ready')
           )
         );
-  
       console.log("Chapters Ready: " + result.length);
       console.log("Chapter length: " + props.course.courseLayout.chapters.length)
-  
       if (result.length < props.course.courseLayout.chapters.length) {
         // Continue polling after 2 seconds
-        setTimeout(async () => {
+        setTimeout(() => {
           checkNotes();
         }, 2000);
       } else {
         props.refreshData();
         setLoading(false);
       }
-    } catch (error) {
-      console.error("Error in checkNotes:", error);
-      setLoading(false); // Stop loading on error
-    }
   };
   
   
