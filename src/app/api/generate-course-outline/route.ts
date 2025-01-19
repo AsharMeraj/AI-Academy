@@ -38,6 +38,7 @@ export async function POST(req: Request) {
   
   
     // Trigger Inngest event
+
     await inngest.send({
       name: "notes.generate",
       data: {course: dbResult[0]},
