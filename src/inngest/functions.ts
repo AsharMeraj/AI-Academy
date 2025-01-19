@@ -51,7 +51,6 @@ export const GenerateNotes = inngest.createFunction(
     // Generate Notes with each chapter using AI
     const Chapters = course.courseLayout.chapters;
     await step.run('Generate Chapter Notes', async () => {
-      let index = 0
 
       const PROMPT = `
             Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
@@ -67,7 +66,7 @@ export const GenerateNotes = inngest.createFunction(
       const aiResp = JSON.parse(result.response.text());
 
       const chapterData = {
-        chapterId: index,
+        chapterId: 0,
         courseId: course.courseId,
         notes: aiResp,
         status: 'Ready',
