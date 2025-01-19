@@ -169,9 +169,12 @@ const MaterialCardItem = (props: PropType) => {
       .where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId), eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
     console.log("Chapters Ready: " +result.length)
     if (result.length < props.course.courseLayout.chapters.length) {
-      setTimeout(checkNotes, 3000); // Retry after 2 seconds
+      setTimeout(() => {
+        props.refreshData()
+        checkNotes()
+      }, 2000)
     } else {
-      props.refreshData();
+      props.refreshData()
       setLoading(false);
     }
   };
