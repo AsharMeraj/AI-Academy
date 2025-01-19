@@ -171,7 +171,7 @@ const MaterialCardItem = (props: PropType) => {
 
       console.log('Chapters Ready:', result.length);
       if (result.length < props.course.courseLayout.chapters.length) {
-        setTimeout(checkNotes, 2000); // Avoid infinite loop, retry every 2 seconds
+        setTimeout(checkNotes, 1000); // Avoid infinite loop, retry every 2 seconds
       } else {
         await props.refreshData();
         setLoading(false);
