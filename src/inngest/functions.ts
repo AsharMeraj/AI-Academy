@@ -66,29 +66,17 @@ export const GenerateNotes = inngest.createFunction(
           const result = await generateNotesAiModel.sendMessage(PROMPT);
           const aiResp = JSON.parse(result.response.text());
 
-          return {
+          await db.insert(CHAPTER_NOTES_TABLE).values({
             chapterId: index,
             courseId: course.courseId,
             notes: aiResp,
             status: 'Ready',
-          };
+          });
         } catch (error) {
           console.error(`Error generating notes for chapter ${index}:`, error);
           return null; // Skip this chapter on error
         }
       });
-
-      const chapterData = (await Promise.all(chapterPromises))
-        .filter((data) => data !== null) as {
-          chapterId: number;
-          courseId: string;
-          notes: NotesChapter[];
-          status: string;
-        }[];
-      console.log(chapterData)
-      if (chapterData.length) {
-        await db.insert(CHAPTER_NOTES_TABLE).values(chapterData);
-      }
     });
   }
 );
