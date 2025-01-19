@@ -163,22 +163,17 @@ const MaterialCardItem = (props: PropType) => {
 
   const checkNotes = async () => {
     setLoading(true);
-    try {
-      const result = await db
-        .select()
-        .from(CHAPTER_NOTES_TABLE)
-        .where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId), eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
+    const result = await db
+      .select()
+      .from(CHAPTER_NOTES_TABLE)
+      .where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId), eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
 
-      console.log('Chapters Ready:', result.length);
-      if (result.length < props.course.courseLayout.chapters.length) {
-        setTimeout(checkNotes, 1000); // Avoid infinite loop, retry every 2 seconds
-      } else {
-        await props.refreshData();
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error checking notes:', error);
+    console.log('Chapters Ready:', result.length);
+    if (result.length === props.course.courseLayout.chapters.length) {
+      await props.refreshData();
       setLoading(false);
+    } else {
+      setTimeout(checkNotes, 2000); // Avoid infinite loop, retry every 2 seconds
     }
   };
 
@@ -230,9 +225,8 @@ const MaterialCardItem = (props: PropType) => {
   return (
     props.studyTypeContent && (
       <div
-        className={`border shadow-md rounded-lg p-5 flex flex-col items-center ${
-          checkResult() && 'grayscale'
-        }`}
+        className={`border shadow-md rounded-lg p-5 flex flex-col items-center ${checkResult() && 'grayscale'
+          }`}
       >
         {checkResult() ? (
           <h2 className="p-1 px-2 bg-gray-500 text-white rounded-full text-[10px] mb-2">Generate</h2>
