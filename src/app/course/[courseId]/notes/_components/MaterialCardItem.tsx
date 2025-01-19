@@ -162,22 +162,37 @@ const MaterialCardItem = (props: PropType) => {
   }, [props.item.type, props.studyTypeContent]);
 
   const checkNotes = async () => {
-    setLoading(true);
-    const result = await db
-      .select()
-      .from(CHAPTER_NOTES_TABLE)
-      .where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId), eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
-    console.log("Chapters Ready: " +result.length)
-    if (result.length < props.course.courseLayout.chapters.length) {
-      setTimeout(() => {
-        props.refreshData()
-        checkNotes()
-      }, 2000)
-    } else {
-      props.refreshData()
-      setLoading(false);
+    try {
+      setLoading(true);
+      const result = await db
+        .select()
+        .from(CHAPTER_NOTES_TABLE)
+        .where(
+          and(
+            eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
+            eq(CHAPTER_NOTES_TABLE.status, 'Ready')
+          )
+        );
+  
+      console.log("Chapters Ready: " + result.length);
+  
+      if (result.length < props.course.courseLayout.chapters.length) {
+        // Continue polling after 2 seconds
+        setTimeout(async () => {
+          await props.refreshData();
+          checkNotes();
+        }, 2000);
+      } else {
+        // Final refresh and stop loading
+        await props.refreshData();
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error in checkNotes:", error);
+      setLoading(false); // Stop loading on error
     }
   };
+  
   
 
   const GenerateContent = async () => {
