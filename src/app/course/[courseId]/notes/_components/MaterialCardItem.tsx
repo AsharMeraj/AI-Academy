@@ -159,9 +159,6 @@ const MaterialCardItem = (props: PropType) => {
     if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
       checkNotes();
     }
-    else {
-      props.refreshData()
-    }
   }, [props.item.type, props.studyTypeContent]);
 
   const checkNotes = async () => {
