@@ -174,8 +174,16 @@ const MaterialCardItem = (props: PropType) => {
       );
     console.log("Chapters Ready: " + result.length);
     console.log("Chapter length: " + props.course.courseLayout.chapters.length)
-    props.refreshData();
-    setLoading(false);
+    if (result.length < props.course.courseLayout.chapters.length) {
+      // Continue polling after 2 seconds
+      setTimeout(async() => {
+        checkNotes()
+        await props.refreshData();
+      }, 3000);
+    } else {
+      await props.refreshData();
+      setLoading(false);
+    }
   };
 
 
@@ -223,7 +231,14 @@ const MaterialCardItem = (props: PropType) => {
 
 
   const checkResult = () => {
-    return !props.studyTypeContent?.[props.item.type as keyof Notes]?.length;
+    if(props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course?.courseLayout?.chapters?.length)
+    {
+      return true
+    } else if (props.item.type !== 'notes' && !props.studyTypeContent?.[props.item.type as keyof Notes]?.length) {
+      return true
+    } else {
+      return false
+    }
   };
 
   return (
