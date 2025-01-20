@@ -176,12 +176,12 @@ const MaterialCardItem = (props: PropType) => {
     console.log("Chapter length: " + props.course.courseLayout.chapters.length)
     if (result.length < props.course.courseLayout.chapters.length) {
       // Continue polling after 2 seconds
-      setTimeout(async() => {
-        await props.refreshData();
+      setTimeout(() => {
+        props.refreshData();
         checkNotes()
-      }, 3000);
+      }, 2000);
     } else {
-      await props.refreshData();
+      props.refreshData();
       setLoading(false);
     }
   };
@@ -211,7 +211,7 @@ const MaterialCardItem = (props: PropType) => {
           if (rows.length === 0) {
             setTimeout(CheckStatus, 2000); // Retry every 2 seconds
           } else {
-            await props.refreshData(); // Ensure this updates the UI
+            props.refreshData(); // Ensure this updates the UI
             toast.success(`${props.item.type} Generated Successfully!`);
             setLoading(false);
           }
