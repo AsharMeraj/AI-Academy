@@ -159,7 +159,7 @@ const MaterialCardItem = (props: PropType) => {
     if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
       checkNotes();
     }
-  },[props.studyTypeContent?.notes?.length, props.item.type]);
+  },[]);
   
   const checkNotes = async () => {
       setLoading(true);
