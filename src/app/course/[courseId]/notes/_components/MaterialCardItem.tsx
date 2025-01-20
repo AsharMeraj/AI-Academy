@@ -159,52 +159,47 @@ const MaterialCardItem = (props: PropType) => {
     if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
       checkNotes();
     }
-  },[]);
-  
+  }, [props.studyTypeContent?.notes?.length, props.item.type]);
+
   const checkNotes = async () => {
-      setLoading(true);
-      const result = await db
-        .select()
-        .from(CHAPTER_NOTES_TABLE)
-        .where(
-          and(
-            eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
-            eq(CHAPTER_NOTES_TABLE.status, 'Ready')
-          )
-        );
-      console.log("Chapters Ready: " + result.length);
-      console.log("Chapter length: " + props.course.courseLayout.chapters.length)
-      if (result.length < props.course.courseLayout.chapters.length) {
-        // Continue polling after 2 seconds
-        setTimeout(() => checkNotes(), 2000);
-      } else {
-        props.refreshData();
-        setLoading(false);
-      }
+    setLoading(true);
+    const result = await db
+      .select()
+      .from(CHAPTER_NOTES_TABLE)
+      .where(
+        and(
+          eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
+          eq(CHAPTER_NOTES_TABLE.status, 'Ready')
+        )
+      );
+    console.log("Chapters Ready: " + result.length);
+    console.log("Chapter length: " + props.course.courseLayout.chapters.length)
+    props.refreshData();
+    setLoading(false);
   };
-  
-  
+
+
 
   const GenerateContent = async () => {
     setLoading(true);
     const chapters = props.course.courseLayout.chapters
       .map((chapter) => chapter.chapterTitle)
       .join(',');
-  
+
     try {
       await axios.post('/api/study-type-content', {
         courseId: props.course.courseId,
         type: props.item.type,
         chapters,
       });
-  
+
       const CheckStatus = async () => {
         try {
           const rows = await db
             .select()
             .from(STUDY_TYPE_CONTENT_TABLE)
             .where(and(eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId), eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')));
-  
+
           if (rows.length === 0) {
             setTimeout(CheckStatus, 2000); // Retry every 2 seconds
           } else {
@@ -217,7 +212,7 @@ const MaterialCardItem = (props: PropType) => {
           setLoading(false);
         }
       };
-  
+
       CheckStatus();
     } catch (error) {
       console.error('Error generating content:', error);
@@ -225,7 +220,7 @@ const MaterialCardItem = (props: PropType) => {
       setLoading(false);
     }
   };
-  
+
 
   const checkResult = () => {
     return !props.studyTypeContent?.[props.item.type as keyof Notes]?.length;
