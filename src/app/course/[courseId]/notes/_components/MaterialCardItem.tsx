@@ -177,11 +177,11 @@ const MaterialCardItem = (props: PropType) => {
     if (result.length < props.course.courseLayout.chapters.length) {
       // Continue polling after 2 seconds
       setTimeout(() => {
-        props.refreshData();
+        await props.refreshData();
         checkNotes()
       }, 2000);
     } else {
-      props.refreshData();
+      await props.refreshData();
       setLoading(false);
     }
   };
@@ -194,7 +194,6 @@ const MaterialCardItem = (props: PropType) => {
       .map((chapter) => chapter.chapterTitle)
       .join(',');
 
-    try {
       await axios.post('/api/study-type-content', {
         courseId: props.course.courseId,
         type: props.item.type,
@@ -202,7 +201,6 @@ const MaterialCardItem = (props: PropType) => {
       });
 
       const CheckStatus = async () => {
-        try {
           const rows = await db
             .select()
             .from(STUDY_TYPE_CONTENT_TABLE)
@@ -215,18 +213,8 @@ const MaterialCardItem = (props: PropType) => {
             toast.success(`${props.item.type} Generated Successfully!`);
             setLoading(false);
           }
-        } catch (error) {
-          console.error('Error checking status:', error);
-          setLoading(false);
-        }
       };
-
       CheckStatus();
-    } catch (error) {
-      console.error('Error generating content:', error);
-      toast.error('Failed to generate content.');
-      setLoading(false);
-    }
   };
 
 
