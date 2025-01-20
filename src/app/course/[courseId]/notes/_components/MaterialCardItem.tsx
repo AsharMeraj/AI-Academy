@@ -177,8 +177,8 @@ const MaterialCardItem = (props: PropType) => {
     if (result.length < props.course.courseLayout.chapters.length) {
       // Continue polling after 2 seconds
       setTimeout(async() => {
-        checkNotes()
         await props.refreshData();
+        checkNotes()
       }, 3000);
     } else {
       await props.refreshData();
