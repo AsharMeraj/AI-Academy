@@ -62,7 +62,7 @@ const ViewNotes = () => {
 
                 <Button
                     onClick={() => {
-                        if (stepCount !== notes.length)
+                        if (stepCount !== notes.length-1)
                             setStepCount(stepCount + 1)
                     }}
                     variant={'outline'}
