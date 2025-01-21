@@ -146,7 +146,8 @@ export const GenerateNotes = inngest.createFunction(
     const Chapters = course.courseLayout.chapters;
 
     await step.run('Generate Chapter Notes', async () => {
-      for (const [index, chap] of Chapters.entries()) {
+      let index = 0
+      for (const chap of Chapters.entries()) {
           const PROMPT = `
             Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
           Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
@@ -171,7 +172,7 @@ export const GenerateNotes = inngest.createFunction(
             notes: aiResp,
             status: 'Ready',
           });
-
+          index++
           console.log(`Successfully generated notes for chapter ${index}`);
       }
     });
