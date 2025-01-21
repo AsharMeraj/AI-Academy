@@ -142,42 +142,49 @@ export const GenerateNotes = inngest.createFunction(
   async ({ event, step }) => {
     const { course }: { course: result } = event.data;
 
-    // Generate Notes with each chapter using AI
+    // Extract chapters from the course layout
     const Chapters = course.courseLayout.chapters;
 
+    // Log the chapters for debugging
+    console.log("Chapters to generate notes for:", Chapters);
+
     await step.run('Generate Chapter Notes', async () => {
-      let index = 0
-      for (const chap of Chapters.entries()) {
+      for (const [index, chapter] of Chapters.entries()) {
+        try {
           const PROMPT = `
             Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-          Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-          Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-          Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-          Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-          Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-          Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-          Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chap)}
+            Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
+            Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
+            Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
+            Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
+            Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
+            Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
+            Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chapter)}
           `;
-          // const PROMPT = `
-          //   Generate same thing as you generate before but this time this is the chapter content: ${JSON.stringify(chap)}
-          // `;
 
+          // Call the AI model to generate notes
           const result = await generateNotesAiModel.sendMessage(PROMPT);
+
+          // Parse the AI response
           const aiResp = JSON.parse(result.response.text());
 
           // Insert generated notes into the database
           await db.insert(CHAPTER_NOTES_TABLE).values({
-            chapterId: index,
+            chapterId: index, // Use index as chapterId
             courseId: course.courseId,
             notes: aiResp,
             status: 'Ready',
           });
-          index++
-          console.log(`Successfully generated notes for chapter ${index}`);
+
+          console.log(`Successfully generated notes for chapter ${index + 1}`);
+        } catch (error) {
+          console.error(`Failed to generate notes for chapter ${index + 1}:`, error);
+        }
       }
     });
   }
 );
+
 
 
 export const GenerateStudyTypeContent = inngest.createFunction(
