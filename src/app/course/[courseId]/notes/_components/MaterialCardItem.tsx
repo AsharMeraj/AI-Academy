@@ -161,66 +161,88 @@ const MaterialCardItem = (props: PropType) => {
     }
   }, [props.studyTypeContent?.notes?.length, props.item.type]);
 
-  const checkNotes = async () => {
-    setLoading(true);
-    const result = await db
-      .select()
-      .from(CHAPTER_NOTES_TABLE)
-      .where(
-        and(
-          eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
-          eq(CHAPTER_NOTES_TABLE.status, 'Ready')
-        )
-      );
-    console.log("Chapters Ready: " + result.length);
-    console.log("Chapter length: " + props.course.courseLayout.chapters.length)
-    if (result.length < props.course.courseLayout.chapters.length) {
-      // Continue polling after 2 seconds
-      setTimeout(async() => {
-        checkNotes()
-        await props.refreshData();
-      }, 3000);
-    } else {
-      await props.refreshData();
-      setLoading(false);
+  const pollDatabase = async (pollFn: () => Promise<boolean>, interval: number): Promise<void> => {
+    const result = await pollFn();
+    if (!result) {
+      setTimeout(() => {
+        pollDatabase(pollFn, interval)
+        props.refreshData()
+      }, interval);
     }
   };
-
-
-
+  
+  const checkNotes = async () => {
+    setLoading(true)
+    const pollFn = async () => {
+      const result = await db
+        .select()
+        .from(CHAPTER_NOTES_TABLE)
+        .where(
+          and(
+            eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
+            eq(CHAPTER_NOTES_TABLE.status, 'Ready')
+          )
+        );
+      const allChaptersReady = result.length >= props.course.courseLayout.chapters.length;
+      if (allChaptersReady) {
+        await props.refreshData();
+        setLoading(false);
+      }
+      return allChaptersReady; // Return true if ready
+    };
+    await pollDatabase(pollFn, 3000); // Use await to properly handle async polling
+  };
+  
   const GenerateContent = async () => {
     setLoading(true);
     const chapters = props.course.courseLayout.chapters
       .map((chapter) => chapter.chapterTitle)
       .join(',');
-
+  
+    try {
+      // Initiate content generation
       await axios.post('/api/study-type-content', {
         courseId: props.course.courseId,
         type: props.item.type,
         chapters,
       });
-
+  
       const CheckStatus = async () => {
+        const pollFn = async () => {
           const rows = await db
             .select()
             .from(STUDY_TYPE_CONTENT_TABLE)
-            .where(and(eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId), eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')));
-
-          if (rows.length === 0) {
-            setTimeout(CheckStatus, 2000); // Retry every 2 seconds
-          } else {
-            props.refreshData(); // Ensure this updates the UI
-            toast.success(`${props.item.type} Generated Successfully!`);
+            .where(
+              and(
+                eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId),
+                eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')
+              )
+            );
+  
+          const isContentReady = rows.length > 0;
+          if (isContentReady) {
+            await props.refreshData();
             setLoading(false);
+            toast.success(`${props.item.type} Generated Successfully!`);
           }
+          return isContentReady; // Return true if content is ready
+        };
+  
+        await pollDatabase(pollFn, 3000); // Start polling
       };
+  
       CheckStatus();
+    } catch (error) {
+      console.error("Error generating content:", error);
+      setLoading(false);
+      toast.error("Failed to generate content. Please try again.");
+    }
   };
+  
 
 
   const checkResult = () => {
-    if(props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course?.courseLayout?.chapters?.length)
-    {
+    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course?.courseLayout?.chapters?.length) {
       return true
     } else if (props.item.type !== 'notes' && !props.studyTypeContent?.[props.item.type as keyof Notes]?.length) {
       return true
