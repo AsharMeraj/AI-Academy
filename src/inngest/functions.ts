@@ -147,8 +147,6 @@ export const GenerateNotes = inngest.createFunction(
 
     // Log the chapters for debugging
     console.log("Chapters to generate notes for:", Chapters);
-
-    await step.run('Generate Chapter Notes', async () => {
       await step.run('Generate Chapter Notes', async () => {
         await Promise.all(Chapters.map(async (chapter, index) => {
           try {
@@ -213,9 +211,7 @@ export const GenerateNotes = inngest.createFunction(
       //     console.error(`Failed to generate notes for chapter ${index + 1}:`, error);
       //   }
       // }
-    });
-  }
-);
+    });;
 
 
 
