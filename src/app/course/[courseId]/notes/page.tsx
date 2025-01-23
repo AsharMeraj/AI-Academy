@@ -1,6 +1,5 @@
 'use client'
-import { AIGeneratedNotesType, chapters } from '@/app/_types/NotesGenerateType'
-import { NotesType } from '@/app/_types/Types'
+import { chapters } from '@/app/_types/NotesGenerateType'
 import { Button } from '@/components/ui/button'
 import axios from 'axios'
 import { useParams } from 'next/navigation'

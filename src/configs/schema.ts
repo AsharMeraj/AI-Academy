@@ -1,5 +1,5 @@
 import { AIGeneratedNotesType } from "@/app/_types/NotesGenerateType";
-import { flashCardAiResultType, NotesChapter, QaResultType, QuizData, StudyMaterial } from "@/app/_types/Types";
+import { flashCardAiResultType, QaResultType, QuizData, StudyMaterial } from "@/app/_types/Types";
 import { boolean, json, pgTable, serial, varchar, integer } from "drizzle-orm/pg-core";
 
 export const USER_TABLE = pgTable('users', {
