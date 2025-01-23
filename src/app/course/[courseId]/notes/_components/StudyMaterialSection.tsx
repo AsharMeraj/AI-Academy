@@ -58,25 +58,17 @@ const StudyMaterialSection = ({ course }: { course: result }) => {
     }, [course.courseId]);
 
     const GetStudyNotes = async () => {
-        try {
-            const response = await axios.post('/api/study-type', {
-                courseId: course.courseId,
-                studyType: 'ALL',
-            });
-            const data = response.data;
+        const response = await axios.post('/api/study-type', {
+            courseId: course.courseId,
+            studyType: 'ALL',
+        });
+        const data = response.data;
+        setResult(data.result);
+        console.log(Result)
+        console.log(data)
+        setStudyTypeContent(data);
+        console.log('Updated Result:', data.result);
 
-            if (data?.result) {
-                setResult(data.result);
-                console.log(Result)
-            } else {
-                console.warn('Result not found in the API response');
-            }
-            console.log(data)
-            setStudyTypeContent(data);
-            console.log('Updated Result:', data.result);
-        } catch (error) {
-            console.error('Error fetching study notes:', error);
-        }
     };
 
 

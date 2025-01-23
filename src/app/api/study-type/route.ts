@@ -9,7 +9,7 @@ export async function POST(req: Request){
 
 
     if(studyType === 'ALL'){
-        const notes = await db.select().from(CHAPTER_NOTES_TABLE).where(eq(CHAPTER_NOTES_TABLE.courseId,courseId))
+        const notes = await db.select().from(CHAPTER_NOTES_TABLE).where(and(eq(CHAPTER_NOTES_TABLE.courseId,courseId),eq(CHAPTER_NOTES_TABLE.status,"Ready")))
 
         // Get the all other study type record
 
@@ -17,8 +17,6 @@ export async function POST(req: Request){
         .where(eq(STUDY_TYPE_CONTENT_TABLE.courseId, courseId))
 
         console.log(contentList)
-
-        console.log("api Notes: " + notes[0]?.notes[0])
         const result = {
             notes: notes,
             flashcard: contentList.filter(item=> item.type === 'flashcard'),

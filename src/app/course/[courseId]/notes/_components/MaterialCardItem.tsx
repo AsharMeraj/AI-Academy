@@ -154,51 +154,38 @@ export interface PropType {
 
 const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
-
   useEffect(() => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < 2) {
+    if (props.item.type === 'notes' && props.studyTypeContent?.notes.length === 0) {
       checkNotes();
     }
-  }, [props.studyTypeContent?.notes?.length, props.item.type]);
+  }, [props.item.type, props.studyTypeContent?.notes.length]);
 
-  const pollDatabase = async (pollFn: () => Promise<boolean>, interval: number): Promise<void> => {
-    const result = await pollFn();
-    if (!result) {
-      setTimeout(() => {
-        pollDatabase(pollFn, interval)
-        props.refreshData()
-      }, interval);
-    }
-  };
-  
   const checkNotes = async () => {
     setLoading(true)
-    const pollFn = async () => {
-      const result = await db
-        .select()
-        .from(CHAPTER_NOTES_TABLE)
-        .where(
-          and(
-            eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
-            eq(CHAPTER_NOTES_TABLE.status, 'Ready')
-          )
-        );
-      const allChaptersReady = result.length >= props.course.courseLayout.chapters.length;
-      if (allChaptersReady) {
-        await props.refreshData();
-        setLoading(false);
-      }
-      return allChaptersReady; // Return true if ready
-    };
-    await pollDatabase(pollFn, 3000); // Use await to properly handle async polling
+
+    const result = await db.select().from(CHAPTER_NOTES_TABLE).where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
+
+
+    console.log(props.course)
+    console.log(result)
+    if (result.length === 0) {
+      setTimeout(async() => {
+        checkNotes()
+        props.refreshData()
+      }, 3000)
+    }
+    else {
+      props.refreshData()
+      setLoading(false);
+    }
   };
-  
+
   const GenerateContent = async () => {
     setLoading(true);
     const chapters = props.course.courseLayout.chapters
       .map((chapter) => chapter.chapterTitle)
       .join(',');
-  
+
     try {
       // Initiate content generation
       await axios.post('/api/study-type-content', {
@@ -206,31 +193,29 @@ const MaterialCardItem = (props: PropType) => {
         type: props.item.type,
         chapters,
       });
-  
+
       const CheckStatus = async () => {
-        const pollFn = async () => {
-          const rows = await db
-            .select()
-            .from(STUDY_TYPE_CONTENT_TABLE)
-            .where(
-              and(
-                eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId),
-                eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')
-              )
-            );
-  
-          const isContentReady = rows.length > 0;
-          if (isContentReady) {
-            await props.refreshData();
-            setLoading(false);
-            toast.success(`${props.item.type} Generated Successfully!`);
-          }
-          return isContentReady; // Return true if content is ready
-        };
-  
-        await pollDatabase(pollFn, 3000); // Start polling
+        const rows = await db
+          .select()
+          .from(STUDY_TYPE_CONTENT_TABLE)
+          .where(
+            and(
+              eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId),
+              eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')
+            )
+          );
+
+        const isContentReady = rows.length > 0;
+        if (isContentReady) {
+          await props.refreshData();
+          setLoading(false);
+          toast.success(`${props.item.type} Generated Successfully!`);
+        }
+        else {
+          CheckStatus()
+        }
       };
-  
+
       CheckStatus();
     } catch (error) {
       console.error("Error generating content:", error);
@@ -238,17 +223,12 @@ const MaterialCardItem = (props: PropType) => {
       toast.error("Failed to generate content. Please try again.");
     }
   };
-  
+
 
 
   const checkResult = () => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes?.length < props.course?.courseLayout?.chapters?.length) {
-      return true
-    } else if (props.item.type !== 'notes' && !props.studyTypeContent?.[props.item.type as keyof Notes]?.length) {
-      return true
-    } else {
-      return false
-    }
+    return !props.studyTypeContent?.[props.item.type as keyof Notes]?.length
+
   };
 
   return (

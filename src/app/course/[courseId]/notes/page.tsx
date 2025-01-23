@@ -1,4 +1,5 @@
 'use client'
+import { AIGeneratedNotesType, chapters } from '@/app/_types/NotesGenerateType'
 import { NotesType } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
 import axios from 'axios'
@@ -7,20 +8,9 @@ import React, { useEffect, useState } from 'react'
 
 const ViewNotes = () => {
     const { courseId } = useParams()
-    const [notes, setNotes] = useState<NotesType[]>([])
+    const [notes, setNotes] = useState<chapters[]>([])
     const [stepCount, setStepCount] = useState<number>(0)
-    // Clean and parse deeply escaped JSON strings
-    // const cleanedString = notes[stepCount] && JSON.parse(notes[stepCount])?.content
-    //     ?.replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-    //     .replace(/\\/g, '\\\\') // Escape backslashes
-    //     .replace(/"/g, '\\"') // Escape double quotes
-    //     .replace(/'/g, "\\'")
-    //     .replace(/\\{2}/g, '\\'); // Escape single quotes for additional safety
-
-    // const parsedString = cleanedString ? JSON.parse(cleanedString) : null;
-    // const actualNotes = parsedString;
-
-
+    
     useEffect(() => {
         GetNotes()
     }, [])
@@ -31,8 +21,8 @@ const ViewNotes = () => {
                 courseId: courseId,
                 studyType: 'notes'
             })
-            setNotes(result.data.Notes)
-            console.log(result.data.Notes)
+            setNotes(result.data.Notes[0]?.notes?.chapters)
+            console.log(result.data)
 
         }
     }
@@ -50,7 +40,7 @@ const ViewNotes = () => {
                     Previous
                 </Button>
                 {
-                    notes.map((note, index) => (
+                    notes?.map((note, index) => (
                         <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
                         </div>
                     ))
@@ -72,7 +62,20 @@ const ViewNotes = () => {
             </div>
 
             <div className='mt-10'>
-                <div dangerouslySetInnerHTML={{ __html: notes[stepCount]?.notes[0]?.content }} />
+                <h1 className='text-3xl font-bold text-black mb-2'>{notes[stepCount]?.heading}</h1>
+                <p className='p-2 mb-8  text-sm'>{notes[stepCount]?.headingPara}</p>
+                {
+                    notes[stepCount]?.subheadings.map((item,index) => (
+                        <div key={index} className='mb-6'>
+                            <h2 className='text-primary font-bold text-2xl'>{item.subheading}</h2>
+                            <p className='p-2  text-sm'>{item.subheadingPara}</p>
+                            <div dangerouslySetInnerHTML={{__html: item.codeBlock}}/>
+                            {/* <div className='p-6 rounded-md bg-gray-100 overflow-x-auto w-full'>
+                                <p className=' text-sm'>{item.codeBlock}</p>
+                            </div> */}
+                        </div>
+                    ))
+                }
             </div>
         </div>
     )

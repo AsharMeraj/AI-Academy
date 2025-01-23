@@ -41,101 +41,16 @@ export const CreateNewUser = inngest.createFunction(
     return "Success"
   }
 )
-
-// export const GenerateNotes = inngest.createFunction(
-//   { id: 'generate-notes' },
-//   { event: 'notes.generate' },
-//   async ({ event, step }) => {
-//     const { course }: { course: result } = event.data;
-
-//     // Generate Notes with each chapter using AI
-//     const Chapters = course.courseLayout.chapters;
-//     await step.run('Generate Chapter Notes', async () => {
-//       Chapters.map(async (chap, index) => {
-//         try {
-//           const PROMPT = `
-//             Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-//           Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-//           Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-//           Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-//           Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-//           Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-//           Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-//           Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chap)}
-//           `;
-//           const result = await generateNotesAiModel.sendMessage(PROMPT);
-//           const aiResp = JSON.parse(result.response.text());
-
-//           await db.insert(CHAPTER_NOTES_TABLE).values({
-//             chapterId: index,
-//             courseId: course.courseId,
-//             notes: aiResp,
-//             status: 'Ready',
-//           });
-//         } catch (error) {
-//           console.error(`Error generating notes for chapter ${index}:`, error);
-//           return null; // Skip this chapter on error
-//         }
-//       });
-//     });
-//   }
-// );
-
-
-
-//     await step.run('Generate Chapter Notes', async () => {
-//       const chapterPromises = Chapters.map(async (chap, index) => {
-//         try {
-//           const PROMPT = `
-//             Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-//           Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-//           Subheadings: Include up to 6 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-//           Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-//           Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-//           Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-//           Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-//           Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chap)}
-//           `;
-//           const result = await generateNotesAiModel.sendMessage(PROMPT);
-//           const aiResp = JSON.parse(result.response.text());
-
-//           return {
-//             chapterId: index,
-//             courseId: course.courseId,
-//             notes: aiResp,
-//             status: 'Ready',
-//           };
-//         } catch (error) {
-//           console.error(`Error generating notes for chapter ${index}:`, error);
-//           return null; // Skip this chapter on error
-//         }
-//       });
-
-//       const chapterData = (await Promise.all(chapterPromises))
-//         .filter((data) => data !== null) as {
-//           chapterId: number;
-//           courseId: string;
-//           notes: NotesChapter[];
-//           status: string;
-//         }[];
-//       console.log(chapterData)
-//       if (chapterData.length) {
-//         await db.insert(CHAPTER_NOTES_TABLE).values(chapterData);
-//       }
-//     });
-//   }
-// );
-
-// Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-//           Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-//           Subheadings: Include up to 6 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-//           Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-//           Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-//           Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-//           Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-//           Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chap)}
-//           `;
-
+// const PROMPT = `
+//   You are an expert notes generator, Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
+//   Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
+//   Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
+//   Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
+//   Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
+//   Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
+//   Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
+//   Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chapter)}
+// `;
 export const GenerateNotes = inngest.createFunction(
   { id: 'generate-notes' },
   { event: 'notes.generate' },
@@ -147,71 +62,37 @@ export const GenerateNotes = inngest.createFunction(
 
     // Log the chapters for debugging
     console.log("Chapters to generate notes for:", Chapters);
-      await step.run('Generate Chapter Notes', async () => {
-        await Promise.all(Chapters.map(async (chapter, index) => {
-          try {
-            const PROMPT = `
-            Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-            Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-            Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-            Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-            Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-            Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-            Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-            Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chapter)}
-          `;
+    await step.run('Generate Chapter Notes', async () => {
+      try {
+        const PROMPT = 
+        `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the value is an array of 3 chapter objects. Each chapter should include the following structure:
+        A main heading as a key-value pair heading with its corresponding paragraph in headingPara.
+        4 Subheadings as a key-value pair subheadings, which should be an array of objects. Each subheading object should include:
+        A subheading as a key-value pair subheading.
+        A corresponding paragraph for the subheading in subheadingPara.
+        A key-value pair codeBlock, containing relevant code as a string based on the topic.
+        A code block should be complete html as string styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; overflow-x: auto; width: 100%; margin-bottom: 1.5rem, ensure horizontal scroll bar for responsiveness and clean and readable code with font-size: 14px
+        Ensure the generated content remains consistent across multiple generations.
+        Please use the following chapter details: ${JSON.stringify(Chapters)}`
 
-          // Call the AI model to generate notes
-          const result = await generateNotesAiModel.sendMessage(PROMPT);
+        // Call the AI model to generate notes
+        const result = await generateNotesAiModel.sendMessage(PROMPT);
 
-          // Parse the AI response
-          const aiResp = JSON.parse(result.response.text());
+        // Parse the AI response
+        const aiResp = JSON.parse(result.response.text());
 
-          // Insert generated notes into the database
-          await db.insert(CHAPTER_NOTES_TABLE).values({
-            chapterId: index, // Use index as chapterId
-            courseId: course.courseId,
-            notes: aiResp,
-            status: 'Ready',
-          });
-          } catch (error) {
-            console.error(`Failed to generate notes for chapter ${index + 1}:`, error);
-          }
-        }));
-      });
-      // for (const [index, chapter] of Chapters.entries()) {
-      //   try {
-      //     const PROMPT = `
-      //       Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-      //       Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-      //       Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-      //       Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-      //       Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-      //       Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-      //       Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-      //       Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chapter)}
-      //     `;
-
-      //     // Call the AI model to generate notes
-      //     const result = await generateNotesAiModel.sendMessage(PROMPT);
-
-      //     // Parse the AI response
-      //     const aiResp = JSON.parse(result.response.text());
-
-      //     // Insert generated notes into the database
-      //     await db.insert(CHAPTER_NOTES_TABLE).values({
-      //       chapterId: index, // Use index as chapterId
-      //       courseId: course.courseId,
-      //       notes: aiResp,
-      //       status: 'Ready',
-      //     });
-
-      //     console.log(`Successfully generated notes for chapter ${index + 1}`);
-      //   } catch (error) {
-      //     console.error(`Failed to generate notes for chapter ${index + 1}:`, error);
-      //   }
-      // }
-    });;
+        // Insert generated notes into the database
+        await db.insert(CHAPTER_NOTES_TABLE).values({
+          chapterId: 0, // Use index as chapterId
+          courseId: course.courseId,
+          notes: aiResp,
+          status: 'Ready',
+        });
+      } catch (error) {
+        console.error(`Failed to generate:`, error);
+      }
+    });
+  });;
 
 
 
