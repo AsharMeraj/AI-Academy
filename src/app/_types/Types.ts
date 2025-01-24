@@ -1,4 +1,4 @@
-import { AIGeneratedNotesType, chapters } from "./NotesGenerateType";
+import { AIGeneratedNotesType } from "./NotesGenerateType";
 
 export interface StudyMaterial {
     courseSummary: string;
