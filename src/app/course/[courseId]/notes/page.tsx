@@ -1,5 +1,6 @@
 'use client'
 import { chapters } from '@/app/_types/NotesGenerateType'
+import { NotesType } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
 import axios from 'axios'
 import { useParams } from 'next/navigation'
@@ -7,7 +8,7 @@ import React, { useEffect, useState } from 'react'
 
 const ViewNotes = () => {
     const { courseId } = useParams()
-    const [notes, setNotes] = useState<chapters[]>([])
+    const [notes, setNotes] = useState<NotesType[]>([])
     const [stepCount, setStepCount] = useState<number>(0)
     
     useEffect(() => {
@@ -20,12 +21,13 @@ const ViewNotes = () => {
                 courseId: courseId,
                 studyType: 'notes'
             })
-            setNotes(result.data.Notes[0]?.notes?.chapters)
-            console.log(result.data)
+            setNotes(result.data.Notes)
+            console.log(result.data.Notes)
 
         }
     }
     console.log(notes)
+    console.log(notes[stepCount]?.notes.chapters)
     return (
         <div>
             <div className='flex gap-5 items-center'>
@@ -61,10 +63,10 @@ const ViewNotes = () => {
             </div>
 
             <div className='mt-10'>
-                <h1 className='text-3xl font-bold text-black mb-2'>{notes[stepCount]?.heading}</h1>
-                <p className='p-2 mb-8  text-sm'>{notes[stepCount]?.headingPara}</p>
+                <h1 className='text-3xl font-bold text-black mb-2'>{notes[stepCount]?.notes.chapters.heading}</h1>
+                <p className='p-2 mb-8  text-sm'>{notes[stepCount]?.notes?.chapters?.headingPara}</p>
                 {
-                    notes[stepCount]?.subheadings.map((item,index) => (
+                    notes[stepCount]?.notes?.chapters?.subheadings.map((item,index) => (
                         <div key={index} className='mb-6'>
                             <h2 className='text-primary font-bold text-2xl'>{item.subheading}</h2>
                             <p className='p-2  text-sm'>{item.subheadingPara}</p>

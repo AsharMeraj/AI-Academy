@@ -9,5 +9,5 @@ export interface chapters {
     subheadings: subheadings[]
 }
 export interface AIGeneratedNotesType {
-    chapters: chapters[]
+    chapters: chapters
 } 

@@ -155,27 +155,25 @@ export interface PropType {
 const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
   useEffect(() => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes.length === 0) {
+    if (props.item.type === 'notes' && props.studyTypeContent?.notes.length < 3) {
       checkNotes();
     }
-  }, [props.item.type, props.studyTypeContent?.notes.length]);
+  }, [props.studyTypeContent?.notes.length, props.item.type]);
 
   const checkNotes = async () => {
     setLoading(true)
-
     const result = await db.select().from(CHAPTER_NOTES_TABLE).where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
 
-
     console.log(props.course)
-    console.log(result)
-    if (result.length === 0) {
+    console.log(result.length)
+    if (result.length < 3) {
       setTimeout(async() => {
+        await props.refreshData()
         checkNotes()
-        props.refreshData()
-      }, 3000)
+      }, 2000)
     }
     else {
-      props.refreshData()
+      await props.refreshData()
       setLoading(false);
     }
   };

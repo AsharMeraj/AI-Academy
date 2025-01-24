@@ -63,33 +63,43 @@ export const GenerateNotes = inngest.createFunction(
     // Log the chapters for debugging
     console.log("Chapters to generate notes for:", Chapters);
     await step.run('Generate Chapter Notes', async () => {
-      try {
-        const PROMPT = 
-        `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the value is an array of 3 chapter objects. Each chapter should include the following structure:
-        A main heading as a key-value pair heading with its corresponding paragraph in headingPara.
-        4 Subheadings as a key-value pair subheadings, which should be an array of objects. Each subheading object should include:
-        A subheading as a key-value pair subheading.
-        A corresponding paragraph for the subheading in subheadingPara.
-        A key-value pair codeBlock, containing relevant code as a string based on the topic.
-        A code block should be complete html as string styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; overflow-x: auto; width: 100%; margin-bottom: 1.5rem, ensure horizontal scroll bar for responsiveness and clean and readable code with font-size: 14px
-        Ensure the generated content remains consistent across multiple generations.
-        Please use the following chapter details: ${JSON.stringify(Chapters)}`
+      for (const [index, chapter] of Chapters.entries()) {
+        try {
+          const PROMPT =
+            //   `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. chapter should include the following structure:
+            // A main heading as a key-value pair heading with its corresponding paragraph in headingPara.
+            // 4 Subheadings as a key-value pair subheadings, which should be an array of objects. Each subheading object should include:
+            // A subheading as a key-value pair subheading.
+            // A corresponding paragraph for the subheading in subheadingPara.
+            // A key-value pair codeBlock, containing relevant code as a string based on the topic.
+            // A code block should be complete html as string styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; overflow-x: auto; width: 100%; margin-bottom: 1.5rem, ensure horizontal scroll bar for responsiveness and clean and readable code with font-size: 14px
+            // Ensure the generated content remains consistent across multiple generations.
+            // Please use the following chapter details: ${JSON.stringify(chapter)}`
+            `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
+            heading: Main heading of the chapter with given emoji an the end.
+            headingPara: A paragraph explaining the chapter's topic.
+            subheadings: An array of 4 objects, each with:
+            subheading: Title of the subheading.
+            subheadingPara: Paragraph explaining the subheading with in 2 lines.
+            codeBlock: Relevant code in complete HTML styled with the following CSS (make sure it is readable and complete code related to it): background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto for horizontal scrolling width: 100% margin-bottom: 1.5rem
+            Ensure clean, consistent, and engaging content. Use the provided chapter details: ${JSON.stringify(chapter)}.`
 
-        // Call the AI model to generate notes
-        const result = await generateNotesAiModel.sendMessage(PROMPT);
+          // Call the AI model to generate notes
+          const result = await generateNotesAiModel.sendMessage(PROMPT);
 
-        // Parse the AI response
-        const aiResp = JSON.parse(result.response.text());
+          // Parse the AI response
+          const aiResp = JSON.parse(result.response.text());
 
-        // Insert generated notes into the database
-        await db.insert(CHAPTER_NOTES_TABLE).values({
-          chapterId: 0, // Use index as chapterId
-          courseId: course.courseId,
-          notes: aiResp,
-          status: 'Ready',
-        });
-      } catch (error) {
-        console.error(`Failed to generate:`, error);
+          // Insert generated notes into the database
+          await db.insert(CHAPTER_NOTES_TABLE).values({
+            chapterId: index, // Use index as chapterId
+            courseId: course.courseId,
+            notes: aiResp,
+            status: 'Ready',
+          });
+        } catch (error) {
+          console.error(`Failed to generate:`, error);
+        }
       }
     });
   });;

@@ -1,4 +1,4 @@
-import { chapters } from "./NotesGenerateType";
+import { AIGeneratedNotesType, chapters } from "./NotesGenerateType";
 
 export interface StudyMaterial {
     courseSummary: string;
@@ -36,12 +36,12 @@ export interface NotesType {
     chapterId: number,
     courseId: string,
     id: number,
-    notes: NotesChapter[]
+    notes: AIGeneratedNotesType
     status: string,
     type: string
 } 
 export interface Notes {
-    notes: chapters[],
+    notes: AIGeneratedNotesType[],
     flashcard: flashCardAiResultType[],
     quiz: QuizData[],
     qa: QaResultType[]
