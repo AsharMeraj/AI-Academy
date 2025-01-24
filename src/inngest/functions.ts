@@ -62,8 +62,8 @@ export const GenerateNotes = inngest.createFunction(
 
     // Log the chapters for debugging
     console.log("Chapters to generate notes for:", Chapters);
-    await step.run('Generate Chapter Notes', async () => {
-      for (const [index, chapter] of Chapters.entries()) {
+    for (const [index, chapter] of Chapters.entries()) {
+      await step.run('Generate Chapter Notes', async () => {
         try {
           const PROMPT =
             //   `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. chapter should include the following structure:
@@ -100,8 +100,8 @@ export const GenerateNotes = inngest.createFunction(
         } catch (error) {
           console.error(`Failed to generate:`, error);
         }
-      }
-    });
+      });
+    }
   });;
 
 
