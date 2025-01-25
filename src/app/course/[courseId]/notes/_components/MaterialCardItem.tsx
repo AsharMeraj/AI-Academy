@@ -164,17 +164,17 @@ const MaterialCardItem = (props: PropType) => {
     setLoading(true)
     const result = await db.select().from(CHAPTER_NOTES_TABLE).where(and(eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),eq(CHAPTER_NOTES_TABLE.status, 'Ready')));
 
-    console.log(props.course)
-    console.log(result.length)
-    if (result.length < 3) {
+    console.log("Chapters length: "+props.course.courseLayout.chapters.length)
+    console.log("Result.Length: "+result.length)
+    if (result.length < props.course.courseLayout.chapters.length) {
       setTimeout(async() => {
         await props.refreshData()
         checkNotes()
       }, 2000)
     }
     else {
-      setLoading(false);
       await props.refreshData()
+      setLoading(false);
     }
   };
 

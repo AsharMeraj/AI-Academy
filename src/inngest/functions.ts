@@ -80,8 +80,8 @@ export const GenerateNotes = inngest.createFunction(
             headingPara: A paragraph explaining the chapter's topic.
             subheadings: An array of 4 objects, each with:
             subheading: Title of the subheading.
-            subheadingPara: Paragraph explaining the subheading with in 2 lines (if the topic is about coding otherwise make it up to 4 lines).
-            codeBlock: Relevant code in complete HTML styled (if needed otherwise just make it blank) with the following CSS (make sure it is readable and complete code related to it with proper spaces not in one line): background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem
+            subheadingPara: A short paragraph (up to 2 lines if the chapter is about programming, otherwise up to 4 lines)..
+            codeBlock: Complete HTML code (with proper code not in one line) in all subheadings if the chapter is about programming, styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem
             Ensure clean, consistent, and engaging content. Use the provided chapter details: ${JSON.stringify(chapter)}.`
 
           // Call the AI model to generate notes
