@@ -173,8 +173,8 @@ const MaterialCardItem = (props: PropType) => {
       }, 2000)
     }
     else {
-      await props.refreshData()
       setLoading(false);
+      await props.refreshData()
     }
   };
 
