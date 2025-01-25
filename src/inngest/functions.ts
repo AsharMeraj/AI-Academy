@@ -66,15 +66,6 @@ export const GenerateNotes = inngest.createFunction(
       await step.run('Generate Chapter Notes', async () => {
         try {
           const PROMPT =
-            //   `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. chapter should include the following structure:
-            // A main heading as a key-value pair heading with its corresponding paragraph in headingPara.
-            // 4 Subheadings as a key-value pair subheadings, which should be an array of objects. Each subheading object should include:
-            // A subheading as a key-value pair subheading.
-            // A corresponding paragraph for the subheading in subheadingPara.
-            // A key-value pair codeBlock, containing relevant code as a string based on the topic.
-            // A code block should be complete html as string styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; overflow-x: auto; width: 100%; margin-bottom: 1.5rem, ensure horizontal scroll bar for responsiveness and clean and readable code with font-size: 14px
-            // Ensure the generated content remains consistent across multiple generations.
-            // Please use the following chapter details: ${JSON.stringify(chapter)}`
             `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
             heading: Main heading of the chapter with given emoji an the end.
             headingPara: A paragraph explaining the chapter's topic.

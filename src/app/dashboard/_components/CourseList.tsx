@@ -7,6 +7,7 @@ import { result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { CourseCountContext } from '@/app/_context/CourseCountContext';
+import Warning from './Warning';
 
 
 const CourseList = () => {

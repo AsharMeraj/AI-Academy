@@ -9,10 +9,13 @@ import { CHAPTER_NOTES_TABLE, STUDY_MATERIAL_TABLE, STUDY_TYPE_CONTENT_TABLE } f
 import { eq } from 'drizzle-orm'
 import Link from 'next/link'
 import { ResultDataContext } from '@/app/_context/CourseCountContext'
+import Warning from './Warning'
+
 
 const CourseCardItem = ({ course, onDelete }: { course: result, onDelete: (id: string) => void }) => {
   const { Result } = useContext(ResultDataContext)
   const [progress, setProgress] = useState<number>(0)
+  const [isEnabled, setIsEnabled] = useState<boolean>(false)
 
   useEffect(() => {
     UpdateProgress()
@@ -49,14 +52,13 @@ const CourseCardItem = ({ course, onDelete }: { course: result, onDelete: (id: s
         </div>
 
         <div className='mt-4 flex justify-between'>
-          <Button variant={'outline'} onClick={DeleteRecord}>Delete</Button>
+          <Button variant={'outline'} onClick={() => setIsEnabled(true)}>Delete</Button>
           <Link href={`/course/ ${course.courseId}`}>
             <Button>View</Button>
           </Link>
         </div>
-
-
       </div>
+      <Warning DeleteRecord={DeleteRecord} isEnabled={isEnabled} setIsEnabled={setIsEnabled}/>
     </div>
   )
 }
