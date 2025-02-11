@@ -6,7 +6,6 @@ import Avatar03 from "../../../public/images/avatar-03.jpg";
 import Avatar04 from "../../../public/images/avatar-04.jpg";
 import Avatar05 from "../../../public/images/avatar-05.jpg";
 import Avatar06 from "../../../public/images/avatar-06.jpg";
-import Header from "./header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -74,7 +73,7 @@ export default function HeroHome() {
               // data-aos="zoom-y-out"
               // data-aos-delay={150}
               >
-                The notes generator you're <br className="max-lg:hidden" />
+                The notes generator you&apos;re <br className="max-lg:hidden" />
                 looking for
               </h1>
               <div className="mx-auto max-w-3xl">

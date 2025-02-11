@@ -2,7 +2,6 @@ import { Notes, result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
 import { db } from '@/configs/db';
 import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE } from '@/configs/schema';
-import { Item } from '@radix-ui/react-select';
 import axios from 'axios';
 import { and, eq } from 'drizzle-orm';
 import { RefreshCcw } from 'lucide-react';

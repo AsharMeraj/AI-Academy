@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Logo from "./logo";
 import Image from "next/image";
 
 export default function Footer({ border = false }: { border?: boolean }) {

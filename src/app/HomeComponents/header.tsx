@@ -1,16 +1,13 @@
 'use client'
-import Logo from "./logo";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import MobileHeader from "../dashboard/_components/MobileHeader";
 import { useState } from "react";
 
 export default function Header() {
-  const path = usePathname()
   const { user } = useUser()
   const [showNavbar, setShowNavbar] = useState<boolean>(false)
   return (
