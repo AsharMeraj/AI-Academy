@@ -41,16 +41,7 @@ export const CreateNewUser = inngest.createFunction(
     return "Success"
   }
 )
-// const PROMPT = `
-//   You are an expert notes generator, Generate detailed exam material content as a JSON array of objects containing a single "content" key with its value as an HTML string styled using inline CSS. Follow these guidelines:
-//   Main Headings: Style with font-size: 2rem; font-weight: bold; color: black; margin-bottom: 0.5rem;.
-//   Subheadings: Include up to 4 subheadings, styled with color: #007bff; font-weight: bold; font-size: 1.7rem; margin-bottom: 0;.
-//   Paragraphs: Add paragraphs in every subheading styled with font-size: 16px; line-height: 1.6; margin-bottom: 0; padding: 0.5rem;.
-//   Programming Topics: Add responsive code blocks under each subheading, styled with background-color: #f3f4f6; padding: 1.5rem; border-radius: 8px; font-family: monospace; font-size: 14px; overflow-x: auto; width: 100%; margin-bottom: 1.5rem;.
-//   Mobile-Friendly Layout: Maintain a clean design with margin-top: 1.5rem; margin-bottom: 1.5rem; between sections.
-//   Don't add any invalid control characters, bad escape sequences, or unnecessary whitespace that might cause errors in string literals.
-//   Exclude <html>, <head>, <body>, and <title> tags. Use the provided chapter details to generate the content: ${JSON.stringify(chapter)}
-// `;
+
 export const GenerateNotes = inngest.createFunction(
   { id: 'generate-notes' },
   { event: 'notes.generate' },
@@ -63,21 +54,24 @@ export const GenerateNotes = inngest.createFunction(
     // Log the chapters for debugging
     console.log("Chapters to generate notes for:", Chapters);
     for (const [index, chapter] of Chapters.entries()) {
+      console.log("Chapter Index: " + index)
       await step.run('Generate Chapter Notes', async () => {
         try {
           const PROMPT =
-            `Generate detailed content in JSON format. The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
+            `Generate detailed content in JSON format in one line in non readable format, The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
             heading: Main heading of the chapter with given emoji an the end.
             headingPara: A paragraph explaining the chapter's topic.
             subheadings: An array of 4 objects, each with:
             subheading: Title of the subheading.
             subheadingPara: A short paragraph (up to 1 line if the chapter is about programming, otherwise up to 3 lines)..
-            codeBlock: Complete HTML code with proper spaces not in one line, in all subheadings (if the chapter is about programming, otherwise make it blank), styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem
-            Ensure clean, consistent, and engaging content. Use the provided chapter details: ${JSON.stringify(chapter)}.`
+            codeBlock: Complete HTML code (make sure to add string in backticks instead of quotation) with proper spaces not in one line, in all subheadings (if the chapter is about programming, otherwise make it blank), styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem
+            Ensure clean, consistent, and engaging content.
+            Use the provided chapter details: ${JSON.stringify(chapter)}.`
 
           // Call the AI model to generate notes
           const result = await generateNotesAiModel.sendMessage(PROMPT);
 
+          console.log(result.response.text())
           // Parse the AI response
           const aiResp = JSON.parse(result.response.text());
 

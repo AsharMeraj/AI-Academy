@@ -35,7 +35,7 @@ const QuestionAnswers = () => {
     <div>
       <h2 className='font-bold text-2xl'>Question and Answers</h2>
       <p>Qa: Help to practice your learning</p>
-      <div className='flex gap-5 items-center mt-6'>
+      <div className='flex gap-3 md:gap-5 items-center mt-6'>
         <Button
           onClick={() => {
             if (stepCount !== 0)

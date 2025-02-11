@@ -19,6 +19,7 @@ export const STUDY_MATERIAL_TABLE = pgTable('studyMaterial', {
     courseLayout: json().$type<StudyMaterial>().notNull(),
     createdBy: varchar().notNull(),
     status: varchar().default('Generating'),
+    date: varchar().notNull(),
     progress: integer().default(0)
 })
 

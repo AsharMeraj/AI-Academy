@@ -7,15 +7,16 @@ import { result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { CourseCountContext } from '@/app/_context/CourseCountContext';
+import Link from 'next/link';
 
 
 const CourseList = () => {
     const { user } = useUser()
     const [courseList, setCourseList] = useState<result[]>([])
     const [loading, setLoading] = useState<boolean>(false)
-   
-    const {setTotalCourse} = useContext(CourseCountContext)
-    
+
+    const { setTotalCourse } = useContext(CourseCountContext)
+
     const handleDelete = (id: string) => {
         setCourseList((prev) => prev.filter((course) => course.courseId !== id))
     }
@@ -35,11 +36,16 @@ const CourseList = () => {
 
     return (
         <div className='mt-10'>
-            <h2 className='font-bold text-2xl flex justify-between items-center'>Your study material
-                <Button onClick={GetCourseList} className='border-primary text-primary' variant={'outline'}> <RefreshCw />Refresh</Button>
+            <h2 className='font-extrabold text-[1.3rem]  md:text-2xl flex gap-4 flex-col md:flex-row justify-between'>Your study material
+                <div className='flex justify-between items-center'>
+                    <Button onClick={GetCourseList} className='border-primary text-primary w-fit' variant={'outline'}> <RefreshCw />Refresh</Button>
+                    <Link href={'/create'} className='md:hidden'>
+                        <Button variant={'outline'}>Create New</Button>
+                    </Link>
+                </div>
             </h2>
 
-            <div className='grid md:grid-cols-2 lg:grid-cols-3 mt-3 gap-5'>
+            <div className='grid md:grid-cols-2 lg:grid-cols-3 mt-8 gap-5 max-w-[80rem]'>
                 {
                     loading === false ? courseList && courseList.map((item, index) => (
                         <CourseCardItem key={index} course={item} onDelete={handleDelete} />

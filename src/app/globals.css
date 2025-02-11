@@ -1,5 +1,7 @@
 @tailwind base;
 @tailwind components;
+@import "additional-styles/utility-patterns.css";
+@import "additional-styles/theme.css";
 @tailwind utilities;
 
 body {

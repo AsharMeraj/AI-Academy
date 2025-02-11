@@ -25,6 +25,7 @@ export interface result {
     id: number,
     topic: string
     status: string,
+    date: string,
     progress: number
 }
 

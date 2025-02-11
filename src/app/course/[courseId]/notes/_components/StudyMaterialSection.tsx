@@ -74,7 +74,7 @@ const StudyMaterialSection = ({ course }: { course: result }) => {
 
     return (
         <div>
-            <h2 className="font-medium text-xl mt-3">Study Material</h2>
+            <h2 className="font-medium text-xl mt-8">Study Material</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-3">
                 {materialList.map((item, index) => (
                     <MaterialCardItem

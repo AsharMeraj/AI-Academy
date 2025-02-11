@@ -46,10 +46,6 @@ const ViewNotes = () => {
                     ))
                 }
 
-                {/* <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
-                </div> */}
-
-
                 <Button
                     onClick={() => {
                         if (stepCount !== notes.length-1)

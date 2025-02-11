@@ -9,10 +9,10 @@ const ChapterList = ({ course }: { course: result }) => {
 
       <div className='mt-3'>
         {course?.courseLayout?.chapters.map((chapter, index) => (
-          <div className='flex gap-5 items-center p-4 border shadow-md mb-2 rounded-lg' key={index}>
-            <h2 className='text-2xl'>{chapter.emoji}</h2>
+          <div className='flex flex-col md:flex-row gap-5 items-start md:items-center p-4 border shadow-md mb-2 rounded-lg' key={index}>
+            <h2 className='text-4xl'>{chapter.emoji}</h2>
             <div>
-              <h2 className='font-medium'>{chapter.chapterTitle}</h2>
+              <h2 className='font-medium text-gray-800'>{chapter.chapterTitle}</h2>
               <p className='text-gray-500 text-sm'>{chapter.chapterSummary}</p>
             </div>
           </div>

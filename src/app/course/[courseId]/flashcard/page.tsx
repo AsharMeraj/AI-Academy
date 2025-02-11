@@ -54,7 +54,7 @@ const Flashcards = () => {
     <div>
       <h2 className='font-bold text-2xl'>Flashcards</h2>
       <p>Flashcards: The Ultimate tool to lock in concept</p>
-      <div className='flex gap-5 items-center mt-8'>
+      <div className='flex gap-3 md:gap-5 items-center mt-8'>
         
         {flashcardData[0]?.content?.map((item, index) => (
           <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`} />

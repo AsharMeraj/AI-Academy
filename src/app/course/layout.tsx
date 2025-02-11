@@ -12,7 +12,7 @@ const CourseViewLayout = ({ children }: { children: React.ReactNode }) => {
 
       <div>
         <DashboardHeader />
-        <div className='mx-10 md:mx-36 lg:mx-60 mt-10'>
+        <div className='mx-5 md:mx-36 mt-10 max-w-3xl lg:mx-auto'>
           {children}
         </div>
         <ToastContainer

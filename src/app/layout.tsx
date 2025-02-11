@@ -20,16 +20,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider appearance={{
+      variables: {colorPrimary: '#305CDE',} 
+      }}>
       <html lang="en">
         <body className={outfit.className}>
           <Provider>
             <NextTopLoader
               color="#305CDE"
               showSpinner={false}
-              />
-              <ContextWrapper>
-              {children}
+            />
+            <ContextWrapper>
+              <div className="flex min-h-screen flex-col overflow-hidden ">
+                {children}
+              </div>
             </ContextWrapper>
           </Provider>
           <Toaster />

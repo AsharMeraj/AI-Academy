@@ -119,7 +119,7 @@ const Pricing = () => {
                             </li>
                         </ul>
                     </div>
-                    <Button variant={'outline'}>Signup of free</Button>
+                    <Button variant={'outline'} className='mt-8'>Signup of free</Button>
                 </div>
 
                 {/* Pro Plan */}

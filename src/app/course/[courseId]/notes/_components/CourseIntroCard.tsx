@@ -38,13 +38,13 @@ const CourseIntroCard = ({ course }: { course: result }) => {
   }, [Result, course.courseId]);
 
   return (
-    <div className='flex gap-5 items-center p-8 border shadow-md rounded-lg'>
+    <div className='flex flex-col md:flex-row gap-5 items-center p-8 border shadow-md rounded-lg'>
       <Image src={'/knowledge.png'} alt='other' width={100} height={100} />
       <div>
         <h2 className='font-bold text-2xl'>{course.topic}</h2>
-        <p className='text-gray-500 mt-1'>{course?.courseLayout?.courseSummary}</p>
-        <Progress value={progress} className='mt-3' />
-        <h2 className='mt-3 text-lg text-primary'>Total Chapters: {course?.courseLayout?.chapters.length}</h2>
+        <p className='text-gray-500 mt-1 text-sm'>{course?.courseLayout?.courseSummary}</p>
+        <Progress value={progress} className='mt-3 h-[5px]' />
+        <h2 className='mt-3 text- text-primary'>Total Chapters: {course?.courseLayout?.chapters.length}</h2>
       </div>
     </div>
   )

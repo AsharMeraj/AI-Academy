@@ -46,7 +46,7 @@ const QuizPage = () => {
       <h2 className='font-bold text-2xl'>Quiz</h2>
       <p>Quiz: Great way to test your knowledge</p>
 
-      <div className='flex gap-5 items-center mt-6'>
+      <div className='flex gap-3 md:gap-5 items-center mt-6'>
         <Button
           onClick={() => {
             if (stepCount !== 0)

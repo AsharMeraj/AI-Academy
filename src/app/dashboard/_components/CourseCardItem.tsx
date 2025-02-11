@@ -40,15 +40,15 @@ const CourseCardItem = ({ course, onDelete }: { course: result, onDelete: (id: s
     <div className='border rounded-lg shadow-md p-5'>
       <div>
         <div className='flex items-center justify-between'>
-          <Image src={'/knowledge.png'} alt='other' width={50} height={50} />
-          <h2 className='text-[10px] p-1 px-2 rounded-full bg-primary text-white'>20 Dec 2024</h2>
+          <Image src={'/knowledge.png'} alt='other' width={40} height={40} />
+          <h2 className='text-[10px] p-1 px-2 rounded-full bg-primary text-white'>{course.date}</h2>
         </div>
 
         <h2 className='mt-3 font-medium text-lg'>{course.topic + " " + course.courseType}</h2>
         <p className='text-sm line-clamp-2 text-gray-500'>{course.courseLayout.courseSummary}</p>
 
         <div className='mt-3'>
-          <Progress value={progress} />
+          <Progress value={progress} className='h-[6px]' />
         </div>
 
         <div className='mt-4 flex justify-between'>
