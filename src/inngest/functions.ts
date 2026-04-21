@@ -46,48 +46,57 @@ export const GenerateNotes = inngest.createFunction(
   { id: 'generate-notes' },
   { event: 'notes.generate' },
   async ({ event, step }) => {
-    const { course }: { course: result } = event.data;
+    const { course } = event.data;
+    const chapters = course.courseLayout.chapters;
 
-    // Extract chapters from the course layout
-    const Chapters = course.courseLayout.chapters;
-
-    // Log the chapters for debugging
-    console.log("Chapters to generate notes for:", Chapters);
-    for (const [index, chapter] of Chapters.entries()) {
-      console.log("Chapter Index: " + index)
-      await step.run('Generate Chapter Notes', async () => {
-        try {
-          const PROMPT =
-            `Generate detailed content in JSON format in one line in non readable format, The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
-            heading: Main heading of the chapter with given emoji an the end.
-            headingPara: A paragraph explaining the chapter's topic.
-            subheadings: An array of 4 objects, each with:
-            subheading: Title of the subheading.
-            subheadingPara: A short paragraph (up to 1 line if the chapter is about programming, otherwise up to 3 lines)..
-            codeBlock: Complete HTML code (make sure to add string in backticks instead of quotation) with proper spaces not in one line, in all subheadings (if the chapter is about programming, otherwise make it blank), styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem
-            Ensure clean, consistent, and engaging content.
-            Use the provided chapter details: ${JSON.stringify(chapter)}.`
-
-          // Call the AI model to generate notes
-          const result = await generateNotesAiModel.sendMessage(PROMPT);
-
-          console.log(result.response.text())
-          // Parse the AI response
-          const aiResp = JSON.parse(result.response.text());
-
-          // Insert generated notes into the database
-          await db.insert(CHAPTER_NOTES_TABLE).values({
-            chapterId: index, // Use index as chapterId
-            courseId: course.courseId,
-            notes: aiResp,
-            status: 'Ready',
-          });
-        } catch (error) {
-          console.error(`Failed to generate:`, error);
+    // Logic: Map chapters to a set of new events and fire them all at once.
+    // This function will finish in milliseconds, avoiding any timeout.
+    await step.sendEvent('dispatch-chapter-jobs',
+      chapters.map((chapter: any, index: number) => ({
+        name: 'chapter.generate.task',
+        data: {
+          chapter: chapter,
+          index: index,
+          courseId: course.courseId,
+          // We pass the full course object if needed, or just the ID
         }
+      }))
+    );
+
+    return { message: `Dispatched ${chapters.length} chapters for generation.` };
+  }
+);
+
+export const GenerateSingleChapterNotes = inngest.createFunction(
+  { id: 'generate-single-chapter-notes' },
+  { event: 'chapter.generate.task' },
+  async ({ event, step }) => {
+    const { chapter, index, courseId } = event.data;
+
+    await step.run('Generate Notes via AI', async () => {
+      const PROMPT = `Generate detailed content in JSON format in one line in non readable format...
+      Use the provided chapter details: ${JSON.stringify(chapter)}.`;
+
+      // Using Gemini 1.5 Flash here is mandatory for speed.
+      const result = await generateNotesAiModel.sendMessage(PROMPT);
+      const rawText = result.response.text();
+
+      // Clean the response: AI sometimes wraps JSON in markdown blocks
+      const cleanJson = rawText.replace(/```json|```/g, "").trim();
+      const aiResp = JSON.parse(cleanJson);
+
+      // Insert into DB
+      await db.insert(CHAPTER_NOTES_TABLE).values({
+        chapterId: index,
+        courseId: courseId,
+        notes: aiResp,
+        status: 'Ready',
       });
-    }
-  });;
+    });
+
+    return { success: true, chapterIndex: index };
+  }
+);
 
 
 

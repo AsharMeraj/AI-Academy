@@ -1,13 +1,13 @@
+'use client';
 import { Notes, result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
 import { db } from '@/configs/db';
 import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE } from '@/configs/schema';
-import axios from 'axios';
 import { and, eq } from 'drizzle-orm';
 import { RefreshCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
 
 export interface ContentType {
@@ -29,14 +29,9 @@ export interface PropType {
 
 const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
-  useEffect(() => {
-    if (props.item.type === 'notes' && props.studyTypeContent?.notes.length < 3) {
-      checkNotes();
-    }
-  }, [props.studyTypeContent?.notes.length, props.item.type]);
 
-  const checkNotes = async () => {
-    setLoading(true); // Ensure loading is true at the start
+  // Use useCallback to prevent unnecessary re-renders of the polling logic
+  const checkNotesStatus = useCallback(async () => {
     const result = await db
       .select()
       .from(CHAPTER_NOTES_TABLE)
@@ -47,21 +42,22 @@ const MaterialCardItem = (props: PropType) => {
         )
       );
 
-    console.log("Chapters length: " + props.course.courseLayout.chapters.length);
-    console.log("Result.Length: " + result.length);
-    console.log(`Condition: ${result.length === props.course.courseLayout.chapters.length}`)
     if (result.length === props.course.courseLayout.chapters.length) {
       await props.refreshData();
-      setLoading(false); // Set loading to false only after all checks are complete
+      setLoading(false);
     } else {
-      setLoading(true)
-      setTimeout(async () => {
-        await props.refreshData();
-        await checkNotes(); // Ensure recursive call happens
-      }, 2000);
+      // Logic: Safe polling every 2 seconds
+      setTimeout(() => checkNotesStatus(), 2000);
     }
-  };
+  }, [props.course.courseId, props.course.courseLayout.chapters.length, props.refreshData]);
 
+  useEffect(() => {
+    const currentNotesLength = props.studyTypeContent?.notes?.length || 0;
+    if (props.item.type === 'notes' && currentNotesLength < props.course.courseLayout.chapters.length) {
+      setLoading(true);
+      checkNotesStatus();
+    }
+  }, [props.studyTypeContent?.notes?.length, props.item.type, props.course.courseLayout.chapters.length, checkNotesStatus]);
 
   const GenerateContent = async () => {
     setLoading(true);
@@ -70,94 +66,103 @@ const MaterialCardItem = (props: PropType) => {
       .join(',');
 
     try {
-      // Initiate content generation
-      await axios.post('/api/study-type-content', {
-        courseId: props.course.courseId,
-        type: props.item.type,
-        chapters,
+      // 1. Native Fetch replaces Axios
+      const response = await fetch('/api/study-type-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: props.course.courseId,
+          type: props.item.type,
+          chapters,
+        }),
       });
 
-      const CheckStatus = async () => {
+      if (!response.ok) throw new Error('Generation failed to start');
+
+      // 2. Safe recursive polling with setTimeout
+      const pollForContent = async () => {
         const rows = await db
           .select()
           .from(STUDY_TYPE_CONTENT_TABLE)
           .where(
             and(
               eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId),
-              eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready')
+              eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready'),
+              eq(STUDY_TYPE_CONTENT_TABLE.type, props.item.type) // Explicitly check type
             )
           );
 
-        const isContentReady = rows.length > 0;
-        if (isContentReady) {
+        if (rows.length > 0) {
           await props.refreshData();
           setLoading(false);
-          toast.success(`${props.item.type} Generated Successfully!`);
-        }
-        else {
-          CheckStatus()
+          toast.success(`${props.item.name} ready!`);
+        } else {
+          setTimeout(pollForContent, 3000); // Check every 3 seconds
         }
       };
 
-      CheckStatus();
+      pollForContent();
     } catch (error) {
-      console.error("Error generating content:", error);
+      console.error("Generation Error:", error);
       setLoading(false);
-      toast.error("Failed to generate content. Please try again.");
+      toast.error("Generation failed.");
     }
   };
 
-
-
-  const checkResult = () => {
-    if(props.item.type === 'notes' && props.studyTypeContent?.[props.item.type as keyof Notes]?.length < props.course.courseLayout.chapters.length){
-      return true
+  const isMissingContent = () => {
+    const type = props.item.type as keyof Notes;
+    const content = props.studyTypeContent?.[type];
+    
+    if (props.item.type === 'notes') {
+      return (content?.length || 0) < props.course.courseLayout.chapters.length;
     }
-    else if(props.item.type !== 'notes' && props.studyTypeContent?.[props.item.type as keyof Notes]?.length === 0){
-      return true
-    }
-
+    return (content?.length || 0) === 0;
   };
 
   return (
-    props.studyTypeContent && (
-      <div
-        className={`border shadow-md rounded-lg p-5 flex flex-col items-center ${checkResult() && 'grayscale'
-          }`}
-      >
-        {checkResult() ? (
-          <h2 className="p-1 px-2 bg-gray-500 text-white rounded-full text-[10px] mb-2">Generate</h2>
-        ) : (
-          <h2 className="p-1 px-2 bg-green-500 text-white rounded-full text-[10px] mb-2">Ready</h2>
-        )}
-
-        <Image src={props.item.icon} alt={props.item.name} width={40} height={40} />
-        <h2 className="font-medium text-base">{props.item.name}</h2>
-        <p className="text-gray-400 text-[13px] text-center">{props.item.desc}</p>
-
-        {checkResult() ? (
-          <Button
-            className="mt-3 w-full"
-            variant="outline"
-            onClick={loading ? undefined : GenerateContent}
-          >
-            {loading ? (
-              <span className="flex gap-2 items-center">
-                Generating <RefreshCcw className="animate-spin" />
-              </span>
-            ) : (
-              'Generate'
-            )}
-          </Button>
-        ) : (
-          <Link href={`/course/${props.course.courseId}/${props.item.path}`}>
-            <Button className="mt-3 w-full" variant="outline">
-              View
-            </Button>
-          </Link>
-        )}
+    <div
+      className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${
+        isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
+      }`}
+    >
+      <div className="w-full flex justify-end">
+        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+          isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
+        }`}>
+          {isMissingContent() ? 'Generate' : 'Ready'}
+        </h2>
       </div>
-    )
+
+      <div className="my-3">
+        <Image src={props.item.icon} alt={props.item.name} width={40} height={40} />
+      </div>
+
+      <h2 className="font-bold text-lg">{props.item.name}</h2>
+      <p className="text-gray-400 text-[12px] text-center mb-4">{props.item.desc}</p>
+
+      {isMissingContent() ? (
+        <Button
+          className="mt-auto w-full"
+          variant="secondary"
+          onClick={loading ? undefined : GenerateContent}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex gap-2 items-center">
+              Generating <RefreshCcw className="animate-spin h-4 w-4" />
+            </span>
+          ) : (
+            'Generate'
+          )}
+        </Button>
+      ) : (
+        <Link href={`/course/${props.course.courseId}/${props.item.path}`} className="w-full mt-auto">
+          <Button className="w-full" variant="outline">
+            View
+          </Button>
+        </Link>
+      )}
+    </div>
   );
 };
 

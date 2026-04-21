@@ -1,98 +1,149 @@
 'use client'
-import { QuizDataType } from '@/app/_types/Types'
+import { QuizDataType, QuizData } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
-import axios from 'axios'
 import { useParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import QuizCardItem from './_components/QuizCardItem'
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const QuizPage = () => {
   const { courseId } = useParams()
-  const [quizData, setQuizData] = useState<QuizDataType>(Object)
+  
+  // Logic: Initializing with null and checking for it prevents "undefined" crashes
+  const [quizData, setQuizData] = useState<QuizData[] | null>(null)
   const [stepCount, setStepCount] = useState<number>(0)
-  const [checkCorrectAnswer, setCheckCorrectAnswer] = useState<boolean | null>(null)
-  const [CorrectAnswer, setCorrectAnswer] = useState<string | null>(null)
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+
+  const GetQuiz = useCallback(async () => {
+    if (!courseId) return;
+
+    setLoading(true)
+    try {
+      const response = await fetch('/api/study-type', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: courseId,
+          studyType: 'quiz'
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch quiz');
+
+      const data = await response.json();
+      // Ensure we are hitting the correct array path
+      setQuizData(data.quiz?.content || []);
+    } catch (error) {
+      console.error("Quiz Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
   useEffect(() => {
-    GetQuiz()
-  }, [])
-
-  const GetQuiz = async () => {
-    const result = await axios.post('/api/study-type', {
-      courseId: courseId,
-      studyType: 'quiz'
-    })
-    setQuizData(result.data.quiz.content)
-  }
-
+    GetQuiz();
+  }, [GetQuiz]);
 
   useEffect(() => {
-    setCheckCorrectAnswer(null)
-    setCorrectAnswer(null)
-  }, [stepCount])
+    setIsCorrect(null);
+  }, [stepCount]);
 
-  const checkAnswer = (userAnswer: string, correctAnswer: string) => {
-    console.log("userAnswer: " + userAnswer, "correctAnswer: " + correctAnswer)
+  const checkAnswer = (userAnswer: string) => {
+    const correctAnswer = quizData?.[stepCount]?.answer;
+    
     if (userAnswer === correctAnswer) {
-      setCheckCorrectAnswer(true)
-      setCorrectAnswer(correctAnswer)
-      return;
-    }
-    else {
-      setCheckCorrectAnswer(false)
+      setIsCorrect(true);
+    } else {
+      setIsCorrect(false);
     }
   }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <Loader2 className="animate-spin text-primary w-10 h-10" />
+        <p className="text-gray-500 mt-2">Preparing your quiz...</p>
+      </div>
+    );
+  }
+
+  if (!quizData || quizData.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500">No quiz questions found.</p>
+      </div>
+    );
+  }
+
+  const currentQuestion = quizData[stepCount];
+
   return (
-    <div>
+    <div className="max-w-2xl mx-auto">
       <h2 className='font-bold text-2xl'>Quiz</h2>
-      <p>Quiz: Great way to test your knowledge</p>
+      <p className="text-gray-600 mb-6">Test your knowledge and see what stuck.</p>
 
-      <div className='flex gap-3 md:gap-5 items-center mt-6'>
+      {/* Dynamic Progress Bar */}
+      <div className='flex gap-2 md:gap-4 items-center mb-8'>
         <Button
-          onClick={() => {
-            if (stepCount !== 0)
-              setStepCount(stepCount - 1)
-          }}
+          onClick={() => setStepCount(prev => Math.max(0, prev - 1))}
+          disabled={stepCount === 0}
           variant={'outline'}
-          size={'sm'}>
-          Previous
+          size={'sm'}
+        >
+          <ChevronLeft className="w-4 h-4" />
         </Button>
-        {quizData?.quiz?.map((item, index) => (
-          <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
+        
+        <div className="flex flex-1 gap-1">
+            {quizData.map((_, index) => (
+                <div 
+                key={index} 
+                className={`h-2 flex-1 rounded-full transition-all ${
+                    index <= stepCount ? 'bg-primary' : 'bg-gray-200'
+                }`} 
+                />
+            ))}
+        </div>
+
+        <Button
+          onClick={() => setStepCount(prev => Math.min(quizData.length - 1, prev + 1))}
+          disabled={stepCount === quizData.length - 1}
+          variant={'outline'}
+          size={'sm'}
+        >
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="min-h-[300px]">
+        <QuizCardItem 
+          checkAnswer={checkAnswer} 
+          quiz={currentQuestion} 
+        />
+      </div>
+
+      {/* Feedback Section */}
+      <div className="mt-6 min-h-[80px]">
+        {isCorrect === true && (
+          <div className='border p-4 border-green-700 rounded-xl bg-green-50 animate-in zoom-in-95 duration-300'>
+            <h2 className='font-bold text-lg text-green-700'>Correct!</h2>
+            <p className='text-green-600'>Great job, that is the right answer.</p>
           </div>
-        ))}
-        <Button
-          onClick={() => {
-            if (stepCount !== 9)
-              setStepCount(stepCount + 1)
-          }}
-          variant={'outline'}
-          size={'sm'}>
-          Next
-        </Button>
-      </div>
+        )}
 
-      <div>
-        <QuizCardItem checkAnswer={(v) => checkAnswer(v, quizData?.quiz?.[stepCount].answer)} quiz={quizData?.quiz?.[stepCount]} />
+        {isCorrect === false && (
+          <div className='border p-4 border-red-700 rounded-xl bg-red-50 animate-in zoom-in-95 duration-300'>
+            <h2 className='font-bold text-lg text-red-700'>Incorrect!</h2>
+            <p className='text-red-700'>
+                The correct answer was: <span className="font-bold">{currentQuestion?.answer}</span>
+            </p>
+          </div>
+        )}
       </div>
-
-      {CorrectAnswer || checkCorrectAnswer !== null ?
-        <div>
-          {
-            checkCorrectAnswer === false ?
-              <div className='border p-3 border-red-700 rounded-lg bg-red-100'>
-                <h2 className='font-bold text-lg text-red-700'>Incorrect!</h2>
-                <p className='text-red-700'>The correct answer is: {CorrectAnswer}</p>
-              </div>
-              :
-              <div className='border p-3 border-green-700 rounded-lg bg-green-100'>
-                <h2 className='font-bold text-lg text-green-700'>Correct!</h2>
-                <p className='text-green-700'>Your answer is correct</p>
-              </div>
-          }
-        </div> :
-        <div></div>}
     </div>
   )
 }
 
-export default QuizPage
+export default QuizPage;

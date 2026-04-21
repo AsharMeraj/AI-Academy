@@ -1,88 +1,140 @@
 'use client'
 import { QaResultType } from '@/app/_types/Types'
 import { Button } from '@/components/ui/button'
-import axios from 'axios'
 import { useParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ChevronDown, ChevronUp } from 'lucide-react'
-
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 
 const QuestionAnswers = () => {
   const { courseId } = useParams()
   const [stepCount, setStepCount] = useState<number>(0)
   const [qaResult, setQaResult] = useState<QaResultType[]>([])
   const [checkOpen, setCheckOpen] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
+
+  const GetQa = useCallback(async () => {
+    if (!courseId) return;
+    
+    setLoading(true)
+    try {
+      const response = await fetch('/api/study-type', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          courseId: courseId,
+          studyType: 'qa'
+        }),
+      });
+
+      if (!response.ok) {
+          throw new Error('Failed to fetch QA data');
+      }
+
+      const data = await response.json();
+      // Ensure we target the correct nested array from your API structure
+      setQaResult(data.qa?.content || []);
+    } catch (error) {
+      console.error("QA Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [courseId]);
+
   useEffect(() => {
-    GetQa()
-  }, [])
+    GetQa();
+  }, [GetQa]);
+
+  // Close the answer whenever the user moves to a new question
   useEffect(() => {
-    setCheckOpen(false)
-  }, [stepCount])
-  const GetQa = async () => {
-    const result = await axios.post('/api/study-type', {
-      courseId: courseId,
-      studyType: 'qa'
-    })
-    console.log(result.data.qa.content)
-    setQaResult(result.data.qa.content)
+    setCheckOpen(false);
+  }, [stepCount]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <Loader2 className="animate-spin text-primary w-10 h-10" />
+        <p className="text-gray-500 mt-2">Loading practice questions...</p>
+      </div>
+    );
   }
+
+  if (qaResult.length === 0) {
+    return (
+      <div className="text-center py-10 border-2 border-dashed rounded-xl">
+        <p className="text-gray-500">No questions found for this course.</p>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="max-w-3xl mx-auto">
       <h2 className='font-bold text-2xl'>Question and Answers</h2>
-      <p>Qa: Help to practice your learning</p>
+      <p className="text-gray-600">Practice your learning and test your knowledge</p>
+      
+      {/* Dynamic Progress Bar & Navigation */}
       <div className='flex gap-3 md:gap-5 items-center mt-6'>
         <Button
-          onClick={() => {
-            if (stepCount !== 0)
-              setStepCount(stepCount - 1)
-          }}
+          onClick={() => setStepCount(prev => Math.max(0, prev - 1))}
+          disabled={stepCount === 0}
           variant={'outline'}
-          size={'sm'}>
+          size={'sm'}
+        >
           Previous
         </Button>
-        {qaResult.map((item, index) => (
-          <div key={index} className={`w-full h-2 rounded-full ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'}`}>
-          </div>
-        ))}
+
+        <div className="flex flex-1 gap-2">
+          {qaResult.map((_, index) => (
+            <div 
+              key={index} 
+              className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                index <= stepCount ? 'bg-primary' : 'bg-gray-200'
+              }`} 
+            />
+          ))}
+        </div>
+
         <Button
-          onClick={() => {
-            if (stepCount !== 9)
-              setStepCount(stepCount + 1)
-          }}
+          onClick={() => setStepCount(prev => Math.min(qaResult.length - 1, prev + 1))}
+          disabled={stepCount === qaResult.length - 1}
           variant={'outline'}
-          size={'sm'}>
+          size={'sm'}
+        >
           Next
         </Button>
       </div>
-      <div>
+
+      {/* Question Area */}
+      <div className="mt-8">
         <Collapsible open={checkOpen} onOpenChange={setCheckOpen}>
-          <CollapsibleTrigger className='p-6 bg-gray-100 shadow-md shadow-black/10 rounded-[0.5rem] my-6 text-left flex justify-between gap-7 w-full'>
-            <h2>
-              Q: {qaResult?.[stepCount]?.question}
+          <CollapsibleTrigger className='p-6 bg-white border border-gray-200 shadow-sm hover:border-primary/50 transition-colors rounded-xl text-left flex justify-between items-center gap-7 w-full group'>
+            <h2 className="text-lg font-medium leading-tight">
+              <span className="text-primary font-bold mr-2">Q{stepCount + 1}:</span> 
+              {qaResult[stepCount]?.question}
             </h2>
-            {
-              checkOpen ? 
-              <ChevronUp/>
-              :
-              <ChevronDown />
-            }
+            <div className="bg-gray-50 p-2 rounded-full group-hover:bg-primary/10 transition-colors">
+              {checkOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
           </CollapsibleTrigger>
-          <CollapsibleContent>
-            <h2 className='rounded-lg p-6 border border-green-700 bg-green-100 text-green-700'>
-              <strong>Ans:</strong> {qaResult?.[stepCount]?.answer}
-            </h2>
+          
+          <CollapsibleContent className="animate-in slide-in-from-top-2 duration-300">
+            <div className='mt-4 rounded-xl p-6 border-l-4 border-green-600 bg-green-50 text-green-900 shadow-sm'>
+              <h3 className="font-bold text-sm uppercase tracking-wider mb-2 text-green-700">Answer</h3>
+              <p className="text-base leading-relaxed">
+                {qaResult[stepCount]?.answer}
+              </p>
+            </div>
           </CollapsibleContent>
         </Collapsible>
-
-
       </div>
     </div>
   )
 }
 
-export default QuestionAnswers
+export default QuestionAnswers;

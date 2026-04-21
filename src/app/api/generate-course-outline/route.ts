@@ -4,21 +4,33 @@ import { STUDY_MATERIAL_TABLE } from "@/configs/schema";
 import { inngest } from "@/inngest/client";
 import { NextResponse } from "next/server";
 
-
 export async function POST(req: Request) {
+  try {
     const { courseId, topic, courseType, difficultyLevel, createdBy, date } = await req.json();
-  
-    // Generate course layout using AI
-    const PROMPT = `Generate a study material for ${topic} for ${courseType} and level of difficulty will be ${difficultyLevel} with summary of course, List of chapters (Max 3) along with summary summary and Emoji for each chapter, Topic list for each chapter. All result in JSON format`;
 
-    // Generate a study material for Python for Exam and level of difficulty will be beginner with summary of course, List of chapters (Max 3) along with summary and Emoji icon for each chapter, Topic list for each chapter. All result in JSON format
-  
-    const aiResp = await courseOutlineAIModel.sendMessage(PROMPT);
-    const aiResult = JSON.parse(aiResp.response.text());
-  
+    const PROMPT = `Generate a study material for ${topic} for ${courseType} and level of difficulty will be ${difficultyLevel} with summary of course, List of chapters (Max 3) along with summary and Emoji for each chapter, Topic list for each chapter. All result in JSON format. Do not include markdown code blocks.`;
 
-  
+    let aiResult;
+    try {
+      // Logic: AI models are volatile. Don't let a 503 kill your entire process.
+      const aiResp = await courseOutlineAIModel.sendMessage(PROMPT);
+      let rawText = aiResp.response.text();
+
+      // CLEANING: Remove potential Markdown formatting (```json ... ```) 
+      // which Gemini frequently adds and causes JSON.parse to fail.
+      const cleanJson = rawText.replace(/```json|```/g, "").trim();
+      aiResult = JSON.parse(cleanJson);
+      
+    } catch (aiError: any) {
+      console.error("AI Generation Error:", aiError);
+      return NextResponse.json(
+        { error: "AI service is currently overloaded. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
+
     // Save data to the database
+    // Note: If this fails, you have a DB connection issue in Karachi/Region.
     const dbResult = await db.insert(STUDY_MATERIAL_TABLE).values({
       courseId,
       courseType,
@@ -27,25 +39,26 @@ export async function POST(req: Request) {
       courseLayout: aiResult,
       difficultyLevel,
       date
-    }).returning({
-      id: STUDY_MATERIAL_TABLE.id,
-      courseId: STUDY_MATERIAL_TABLE.courseId,
-      courseType: STUDY_MATERIAL_TABLE.courseType,
-      topic: STUDY_MATERIAL_TABLE.topic,
-      createdBy: STUDY_MATERIAL_TABLE.createdBy,
-      courseLayout: STUDY_MATERIAL_TABLE.courseLayout,
-      difficultyLevel: STUDY_MATERIAL_TABLE.difficultyLevel,
-    });
-  
-  
-    // Trigger Inngest event
+    }).returning();
 
+    if (!dbResult || dbResult.length === 0) {
+        throw new Error("Database insertion failed.");
+    }
+
+    // Trigger Inngest event
+    // This is good—you're offloading the heavy "Note Generation" to a background job.
     await inngest.send({
       name: "notes.generate",
-      data: {course: dbResult[0]},
+      data: { course: dbResult[0] },
     });
-  
-  
+
     return NextResponse.json({ result: dbResult[0] });
+
+  } catch (error: any) {
+    console.error("Critical Route Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error", details: error.message },
+      { status: 500 }
+    );
   }
-  
+}
