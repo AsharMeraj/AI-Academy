@@ -57,7 +57,7 @@ Once your course is ready, this is where you actually study. I built out four di
   <img src="/public/assets/Notes.png" width="390" style="margin: 4px;"/>
   <img src="/public/assets/Flashcard.png" width="390" style="margin: 4px;"/>
   <img src="/public/assets/Quiz.png" width="390" style="margin: 4px;"/>
-  <img src="/public/assets/QAndA.png" width="390" style="margin: 4px;"/>
+  <img src="/public/assets/QandA.png" width="390" style="margin: 4px;"/>
 </div>
 
 ---
