@@ -70,7 +70,7 @@ const Pricing = () => {
         <div className="py-12 px-4">
             <div className="text-center mb-12">
                 <h2 className="text-3xl font-bold tracking-tight">Pricing</h2>
-                <p className="mt-2 text-gray-600">Get started for free and upgrade when you're ready.</p>
+                <p className="mt-2 text-gray-600">Get started for free and upgrade when you&apos;re ready.</p>
             </div>
 
             <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
