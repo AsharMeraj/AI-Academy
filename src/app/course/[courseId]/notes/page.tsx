@@ -11,6 +11,8 @@ const ViewNotes = () => {
     const [stepCount, setStepCount] = useState<number>(0)
     const [loading, setLoading] = useState<boolean>(true)
 
+    console.log(notes)
+
     const GetNotes = useCallback(async () => {
         if (!courseId) return;
         
@@ -32,7 +34,7 @@ const ViewNotes = () => {
             }
 
             const data = await response.json();
-            setNotes(data.Notes || []);
+            setNotes(data.notes || []);
         } catch (error) {
             console.error("Error loading notes:", error);
         } finally {

@@ -13,7 +13,7 @@ import { MdWorkspacePremium } from "react-icons/md";
 const MobileHeader = ({ setShowNavbar }: { setShowNavbar: React.Dispatch<React.SetStateAction<boolean>> }) => {
     const { user } = useUser()
     return (
-        <section className='w-full h-screen border grid place-items-center z-50 fixed inset-0 backdrop-blur-lg bg-white/80'>
+        <section className='w-full h-fit border grid place-items-center z-50 fixed inset-0 backdrop-blur-lg bg-white/80'>
             <X size={30} color="#305cde" className='absolute top-0 right-0 mt-8 mr-6' onClick={() => setShowNavbar(false)} />
             <div className='flex gap-2 items-center absolute top-0 left-0 m-8'>
                 <Image src={'/logo.svg'} width={35} height={35} alt='/' />

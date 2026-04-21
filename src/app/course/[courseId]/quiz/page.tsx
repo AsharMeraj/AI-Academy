@@ -8,7 +8,7 @@ import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const QuizPage = () => {
   const { courseId } = useParams()
-  
+
   // Logic: Initializing with null and checking for it prevents "undefined" crashes
   const [quizData, setQuizData] = useState<QuizData[] | null>(null)
   const [stepCount, setStepCount] = useState<number>(0)
@@ -16,32 +16,38 @@ const QuizPage = () => {
   const [loading, setLoading] = useState<boolean>(true)
 
   const GetQuiz = useCallback(async () => {
-    if (!courseId) return;
+  if (!courseId) return;
 
-    setLoading(true)
-    try {
-      const response = await fetch('/api/study-type', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          courseId: courseId,
-          studyType: 'quiz'
-        }),
-      });
+  setLoading(true);
+  try {
+    const response = await fetch('/api/study-type', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId, studyType: 'quiz' }),
+    });
 
-      if (!response.ok) throw new Error('Failed to fetch quiz');
+    if (!response.ok) throw new Error('Failed to fetch');
 
-      const data = await response.json();
-      // Ensure we are hitting the correct array path
-      setQuizData(data.quiz?.content || []);
-    } catch (error) {
-      console.error("Quiz Fetch Error:", error);
-    } finally {
-      setLoading(false);
+    const data = await response.json();
+
+    // TARGET THE SPECIFIC NESTING: data.quiz.content.quiz
+    const actualQuestions = data.quiz?.content?.quiz;
+
+    if (Array.isArray(actualQuestions)) {
+      setQuizData(actualQuestions);
+    } else {
+      console.error("Data structure mismatch. Received:", data);
+      setQuizData([]);
     }
-  }, [courseId]);
+  } catch (error) {
+    console.error("Quiz Fetch Error:", error);
+    setQuizData([]);
+  } finally {
+    setLoading(false);
+  }
+}, [courseId]);
+
+  console.log(quizData)
 
   useEffect(() => {
     GetQuiz();
@@ -53,7 +59,7 @@ const QuizPage = () => {
 
   const checkAnswer = (userAnswer: string) => {
     const correctAnswer = quizData?.[stepCount]?.answer;
-    
+
     if (userAnswer === correctAnswer) {
       setIsCorrect(true);
     } else {
@@ -95,16 +101,15 @@ const QuizPage = () => {
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        
+
         <div className="flex flex-1 gap-1">
-            {quizData.map((_, index) => (
-                <div 
-                key={index} 
-                className={`h-2 flex-1 rounded-full transition-all ${
-                    index <= stepCount ? 'bg-primary' : 'bg-gray-200'
-                }`} 
-                />
-            ))}
+          {Array.isArray(quizData) && quizData.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2 flex-1 rounded-full transition-all ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'
+                }`}
+            />
+          ))}
         </div>
 
         <Button
@@ -118,9 +123,9 @@ const QuizPage = () => {
       </div>
 
       <div className="min-h-[300px]">
-        <QuizCardItem 
-          checkAnswer={checkAnswer} 
-          quiz={currentQuestion} 
+        <QuizCardItem
+          checkAnswer={checkAnswer}
+          quiz={currentQuestion}
         />
       </div>
 
@@ -137,7 +142,7 @@ const QuizPage = () => {
           <div className='border p-4 border-red-700 rounded-xl bg-red-50 animate-in zoom-in-95 duration-300'>
             <h2 className='font-bold text-lg text-red-700'>Incorrect!</h2>
             <p className='text-red-700'>
-                The correct answer was: <span className="font-bold">{currentQuestion?.answer}</span>
+              The correct answer was: <span className="font-bold">{currentQuestion?.answer}</span>
             </p>
           </div>
         )}

@@ -1,268 +1,145 @@
 'use client'
 import { UserType } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
-import { db } from '@/configs/db';
-import { USER_TABLE } from '@/configs/schema';
 import { useUser } from '@clerk/nextjs';
-import axios from 'axios';
-import { eq } from 'drizzle-orm';
-import { LucideLoaderCircle } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import { LucideLoaderCircle, Check } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react'
 
 const Pricing = () => {
     const { user } = useUser()
-    const [userDetail, setUserDetail] = useState<UserType>({} as UserType)
+    const [userDetail, setUserDetail] = useState<UserType | null>(null)
     const [loading, setLoading] = useState<boolean>(false)
+    const [fetchingUser, setFetchingUser] = useState<boolean>(true)
+
+    // Logic: Moved DB query to a secure API call
+    const GetUserDetail = useCallback(async () => {
+        if (!user?.primaryEmailAddress?.emailAddress) return;
+        
+        try {
+            setFetchingUser(true);
+            const response = await fetch(`/api/user?email=${user.primaryEmailAddress.emailAddress}`);
+            const data = await response.json();
+            setUserDetail(data.result);
+        } catch (error) {
+            console.error("Failed to fetch user details:", error);
+        } finally {
+            setFetchingUser(false);
+        }
+    }, [user]);
+
     useEffect(() => {
         GetUserDetail()
-    }, [user])
-    const GetUserDetail = async () => {
-        if (user?.primaryEmailAddress?.emailAddress) {
-            const result = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, user?.primaryEmailAddress?.emailAddress))
-            setUserDetail(result[0])
-            console.log(result[0])
-        }
-    }
+    }, [GetUserDetail])
+
     const OnCheckoutClick = async () => {
         setLoading(true)
-        const result = await axios.post('/api/payment/checkout', {
-            priceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID as string
-        })
-        console.log(result.data)
-        window.open(result.data.session.url)
-        setLoading(false)
+        try {
+            const response = await fetch('/api/payment/checkout', {
+                method: 'POST',
+                body: JSON.stringify({
+                    priceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID
+                })
+            });
+            const data = await response.json();
+            if (data.session?.url) window.open(data.session.url, '_self');
+        } catch (error) {
+            console.error("Checkout error:", error);
+        } finally {
+            setLoading(false)
+        }
     }
 
     const onPaymentManage = async () => {
+        if (!userDetail?.customerId) return;
         setLoading(true)
-        console.log(userDetail.customerId)
-        const result = await axios.post('/api/payment/manage-payment', {
-            customerId: userDetail.customerId,
-        })
-        console.log(result.data)
-        window.open(result.data.url)
-        setLoading(false)
-
+        try {
+            const response = await fetch('/api/payment/manage-payment', {
+                method: 'POST',
+                body: JSON.stringify({ customerId: userDetail.customerId })
+            });
+            const data = await response.json();
+            if (data.url) window.open(data.url, '_self');
+        } catch (error) {
+            console.error("Management error:", error);
+        } finally {
+            setLoading(false)
+        }
     }
+
     return (
-        <div>
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight text-center mt-8 sm:text-2xl">Pricing</h2>
-                <p className="max-w-3xl mx-auto mt-1  text-center">
-                    Get started on our free plan and upgrade when you are ready.
-                </p>
+        <div className="py-12 px-4">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold tracking-tight">Pricing</h2>
+                <p className="mt-2 text-gray-600">Get started for free and upgrade when you're ready.</p>
             </div>
-            <div className="mt-12 lg:px-8 mx-auto container space-y-12 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-x-8">
+
+            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Free Plan */}
-                <div className="relative p-8 border border-gray-200 rounded-2xl shadow-sm flex flex-col">
-                    <div className="flex-1">
-                        <h3 className="font-semibold">Free</h3>
-                        <p className="mt-4 flex items-baseline">
-                            <span className="text-4xl font-extrabold tracking-tight">$0</span>
-                            <span className="ml-1 text-xl font-semibold">/month</span>
-                        </p>
-                        <p className="mt-6">You just want to discover</p>
-                        <ul role="list" className="mt-6 space-y-3">
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">10 Credits</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">Generate video (2 credits)</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">Quizz (1 credit)</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <Button variant={'outline'} className='mt-8'>Signup of free</Button>
-                </div>
+                <PriceCard 
+                    title="Free" 
+                    price="0" 
+                    description="Perfect for discovering the platform"
+                    features={["10 Credits", "Generate video (2 credits)", "Quiz (1 credit)"]}
+                    buttonText="Sign up for free"
+                    variant="outline"
+                />
 
                 {/* Pro Plan */}
-                <div className="relative p-8 border border-gray-200 rounded-2xl shadow-sm flex flex-col">
+                <div className="relative p-8 border-2 border-primary rounded-2xl shadow-lg flex flex-col bg-white">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-bold uppercase">
+                        Most Popular
+                    </span>
                     <div className="flex-1">
-                        <h3 className="font-semibold">Pro</h3>
-                        <p className="absolute top-0 py-1.5 px-4 bg-primary text-white rounded-full text-[11px] font-semibold uppercase tracking-wide transform -translate-y-1/2">
-                            Most popular
-                        </p>
-                        <p className="mt-4 flex items-baseline">
-                            <span className="text-3xl font-extrabold tracking-tight">$12</span>
-                            <span className="ml-1 text-xl font-semibold">/month</span>
-                        </p>
-                        <p className="mt-6">You want to learn and have a personal assistant</p>
-                        <ul role="list" className="mt-6 space-y-3">
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">30 credits</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">Powered by GPT-4 (more accurate)</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">Generate video (2 credits)</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm">Quizz (1 credit)</span>
-                            </li>
-                            <li className="flex">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="flex-shrink-0 w-6 h-6 text-primary"
-                                    aria-hidden="true"
-                                >
-                                    <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                                <span className="ml-3 text-sm ">Analytics on the quizz</span>
-                            </li>
+                        <h3 className="font-bold text-xl">Pro</h3>
+                        <div className="mt-4 flex items-baseline">
+                            <span className="text-4xl font-extrabold">$12</span>
+                            <span className="ml-1 text-gray-500">/month</span>
+                        </div>
+                        <ul className="mt-6 space-y-4">
+                            <FeatureItem text="30 credits" />
+                            <FeatureItem text="Powered by GPT-4" />
+                            <FeatureItem text="Generate video (2 credits)" />
+                            <FeatureItem text="Analytics on quizzes" />
                         </ul>
                     </div>
-                    {
-                        userDetail?.isMember === false ?
-                            <Button
-                                className='mt-8'
-                                onClick={OnCheckoutClick}
-                            >
-                                {
-                                    loading ?
-                                        <span className='flex items-center  gap-2 justify-center'>
-                                            <h2>Get Started</h2> <LucideLoaderCircle className='animate-spin' />
-                                        </span>
 
-                                        :
-                                        <span>Get Started</span>
-                                }
-                            </Button>
-                            :
-                            <Button
-                                className='mt-8'
-                                onClick={onPaymentManage}
-                            >
-                                {
-                                    loading ?
-                                        <span className='flex items-center  gap-2 justify-center'>
-                                            <h2>Manage Payment</h2> <LucideLoaderCircle className='animate-spin' />
-                                        </span>
-
-                                        :
-                                        <span>Manage Payment</span>
-                                }
-                            </Button>
-                    }
+                    <Button 
+                        className="mt-8 w-full h-12 text-lg" 
+                        disabled={loading || fetchingUser}
+                        onClick={userDetail?.isMember ? onPaymentManage : OnCheckoutClick}
+                    >
+                        {loading ? <LucideLoaderCircle className="animate-spin" /> : 
+                         userDetail?.isMember ? "Manage Subscription" : "Get Started"}
+                    </Button>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
+
+// Reusable Sub-components for cleaner code
+const FeatureItem = ({ text }: { text: string }) => (
+    <li className="flex items-center gap-3">
+        <Check className="w-5 h-5 text-primary flex-shrink-0" />
+        <span className="text-sm text-gray-600">{text}</span>
+    </li>
+);
+
+const PriceCard = ({ title, price, description, features, buttonText, variant }: any) => (
+    <div className="p-8 border border-gray-200 rounded-2xl flex flex-col hover:shadow-md transition-shadow">
+        <div className="flex-1">
+            <h3 className="font-bold text-xl">{title}</h3>
+            <div className="mt-4 flex items-baseline">
+                <span className="text-4xl font-extrabold">${price}</span>
+                <span className="ml-1 text-gray-500">/month</span>
+            </div>
+            <p className="mt-4 text-sm text-gray-500">{description}</p>
+            <ul className="mt-6 space-y-4">
+                {features.map((f: string) => <FeatureItem key={f} text={f} />)}
+            </ul>
+        </div>
+        <Button variant={variant} className="mt-8 w-full">{buttonText}</Button>
+    </div>
+);
 
 export default Pricing;
