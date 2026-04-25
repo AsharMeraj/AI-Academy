@@ -15,10 +15,9 @@ const QuizPage = () => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
-  const GetQuiz = useCallback(async () => {
+ const GetQuiz = useCallback(async () => {
   if (!courseId) return;
 
-  setLoading(true);
   try {
     const response = await fetch('/api/study-type', {
       method: 'POST',
@@ -29,9 +28,15 @@ const QuizPage = () => {
     if (!response.ok) throw new Error('Failed to fetch');
 
     const data = await response.json();
+    const record = data.quiz;
 
-    // TARGET THE SPECIFIC NESTING: data.quiz.content.quiz
-    const actualQuestions = data.quiz?.content?.quiz;
+    // Keep spinner on while generating
+    if (record?.status === 'Generating' || !record?.content) {
+      setTimeout(() => GetQuiz(), 3000);
+      return;
+    }
+
+    const actualQuestions = record?.content?.quiz;
 
     if (Array.isArray(actualQuestions)) {
       setQuizData(actualQuestions);
@@ -39,12 +44,13 @@ const QuizPage = () => {
       console.error("Data structure mismatch. Received:", data);
       setQuizData([]);
     }
+    setLoading(false); // 👈 only when data is ready
   } catch (error) {
     console.error("Quiz Fetch Error:", error);
     setQuizData([]);
-  } finally {
     setLoading(false);
   }
+  // 👈 no finally block
 }, [courseId]);
 
   console.log(quizData)

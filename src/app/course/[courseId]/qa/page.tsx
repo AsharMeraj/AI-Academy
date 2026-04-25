@@ -18,34 +18,32 @@ const QuestionAnswers = () => {
   const [loading, setLoading] = useState<boolean>(true)
 
   const GetQa = useCallback(async () => {
-    if (!courseId) return;
-    
-    setLoading(true)
-    try {
-      const response = await fetch('/api/study-type', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          courseId: courseId,
-          studyType: 'qa'
-        }),
-      });
+  if (!courseId) return;
 
-      if (!response.ok) {
-          throw new Error('Failed to fetch QA data');
-      }
+  try {
+    const response = await fetch('/api/study-type', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId, studyType: 'qa' }),
+    });
 
-      const data = await response.json();
-      // Ensure we target the correct nested array from your API structure
-      setQaResult(data.qa?.content || []);
-    } catch (error) {
-      console.error("QA Fetch Error:", error);
-    } finally {
-      setLoading(false);
+    if (!response.ok) throw new Error('Failed to fetch QA data');
+
+    const data = await response.json();
+    const record = data.qa;
+
+    if (record?.status === 'Generating' || !record?.content) {
+      setTimeout(() => GetQa(), 3000);
+      return; // 👈 keep spinner on, don't setLoading(false)
     }
-  }, [courseId]);
+
+    setQaResult(record?.content || []);
+    setLoading(false); // 👈 only stop loading when data is ready
+  } catch (error) {
+    console.error("QA Fetch Error:", error);
+    setLoading(false);
+  }
+}, [courseId]);
 
   useEffect(() => {
     GetQa();

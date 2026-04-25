@@ -23,7 +23,6 @@ const Flashcards = () => {
 
   const GetFlashCards = useCallback(async () => {
     try {
-      setLoading(true)
       const response = await fetch('/api/study-type', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,18 +34,19 @@ const Flashcards = () => {
       const data = await response.json();
       const record = data.flashcard?.[0];
 
-      // ✅ If still generating, poll every 3 seconds
+      // Keep spinner on while generating
       if (record?.status === 'Generating' || !record?.content) {
         setTimeout(() => GetFlashCards(), 3000);
         return;
       }
 
       setFlashcardData(data.flashcard || []);
+      setLoading(false); // 👈 only when data is ready
     } catch (error) {
       console.error("Error fetching flashcards:", error);
-    } finally {
       setLoading(false);
     }
+    // 👈 no finally block
   }, [courseId]);
 
   useEffect(() => {
@@ -89,9 +89,8 @@ const Flashcards = () => {
         {cards.map((_: any, index: number) => (
           <div
             key={index}
-            className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
-              index <= stepCount ? 'bg-primary' : 'bg-gray-200'
-            }`}
+            className={`h-2 flex-1 rounded-full transition-colors duration-300 ${index <= stepCount ? 'bg-primary' : 'bg-gray-200'
+              }`}
           />
         ))}
       </div>
