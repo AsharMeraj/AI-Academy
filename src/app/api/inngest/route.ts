@@ -3,19 +3,19 @@ import { inngest } from "../../../inngest/client";
 import { 
   CreateNewUser, 
   GenerateNotes, 
-  GenerateSingleChapterNotes, // 👈 missing
+  GenerateSingleChapterNotes,
   GenerateStudyTypeContent, 
   helloWorld 
 } from "@/inngest/functions";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  streaming: 'allow',
+  streaming: true, // 👈 was 'allow', now boolean
   functions: [
     helloWorld,
     CreateNewUser,
     GenerateNotes,
-    GenerateSingleChapterNotes, // 👈 missing
+    GenerateSingleChapterNotes,
     GenerateStudyTypeContent,
   ],
 });

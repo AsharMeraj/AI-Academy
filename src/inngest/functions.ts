@@ -2,11 +2,10 @@ import { inngest } from "./client";
 import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
 import { db } from "@/configs/db";
 import { eq } from "drizzle-orm";
-import { generateNotes, generateFlashCards, generateQuiz, generateQa } from "@/configs/AiModel"; // 👈 new imports
+import { generateNotes, generateFlashCards, generateQuiz, generateQa } from "@/configs/AiModel";
 
 export const helloWorld = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
+  { id: "hello-world", triggers: [{ event: "test/hello.world" }] },
   async ({ event, step }) => {
     await step.sleep("wait-a-moment", "1s");
     return { message: `Asalam u Alikum ${event.data.email}!` };
@@ -14,8 +13,7 @@ export const helloWorld = inngest.createFunction(
 );
 
 export const CreateNewUser = inngest.createFunction(
-  { id: 'create-user' },
-  { event: 'user.create' },
+  { id: 'create-user', triggers: [{ event: 'user.create' }] },
   async ({ event, step }) => {
     const { user } = event.data;
     await step.run('Check user and create new if not', async () => {
@@ -36,8 +34,7 @@ export const CreateNewUser = inngest.createFunction(
 );
 
 export const GenerateNotes = inngest.createFunction(
-  { id: 'generate-notes' },
-  { event: 'notes.generate' },
+  { id: 'generate-notes', triggers: [{ event: 'notes.generate' }] },
   async ({ event, step }) => {
     const { course } = event.data;
     const chapters = course.courseLayout.chapters;
@@ -45,11 +42,7 @@ export const GenerateNotes = inngest.createFunction(
     await step.sendEvent('dispatch-chapter-jobs',
       chapters.map((chapter: any, index: number) => ({
         name: 'chapter.generate.task',
-        data: {
-          chapter,
-          index,
-          courseId: course.courseId,
-        }
+        data: { chapter, index, courseId: course.courseId }
       }))
     );
 
@@ -58,8 +51,7 @@ export const GenerateNotes = inngest.createFunction(
 );
 
 export const GenerateSingleChapterNotes = inngest.createFunction(
-  { id: 'generate-single-chapter-notes' },
-  { event: 'chapter.generate.task' },
+  { id: 'generate-single-chapter-notes', triggers: [{ event: 'chapter.generate.task' }] },
   async ({ event, step }) => {
     const { chapter, index, courseId } = event.data;
 
@@ -73,7 +65,6 @@ export const GenerateSingleChapterNotes = inngest.createFunction(
         codeBlock: Complete HTML code with proper spaces, styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem (blank if not programming).
         Use the provided chapter details: ${JSON.stringify(chapter)}`;
 
-      // ✅ Replaced Gemini .sendMessage() with new Groq function
       const aiResp = await generateNotes(PROMPT);
 
       await db.insert(CHAPTER_NOTES_TABLE).values({
@@ -89,18 +80,11 @@ export const GenerateSingleChapterNotes = inngest.createFunction(
 );
 
 export const GenerateStudyTypeContent = inngest.createFunction(
-  { id: 'Generate Study Type Content' },
-  { event: 'studyType.content' },
+  { id: 'Generate Study Type Content', triggers: [{ event: 'studyType.content' }] },
   async ({ event, step }) => {
     const { studyType, prompt, recordId } = event.data;
 
-    // 👇 Add this temporarily
-    console.log("GROQ KEY EXISTS:", !!process.env.GROQ_API_KEY);
-    console.log("studyType:", studyType);
-    console.log("recordId:", recordId);
-
     const AiResult = await step.run('Generating content using AI', async () => {
-      // ✅ Replaced Gemini .sendMessage() with new Groq functions
       if (studyType === 'flashcard') return await generateFlashCards(prompt);
       if (studyType === 'quiz') return await generateQuiz(prompt);
       return await generateQa(prompt);
