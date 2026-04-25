@@ -2,15 +2,13 @@ import { inngest } from "./client";
 import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE, USER_TABLE } from "@/configs/schema";
 import { db } from "@/configs/db";
 import { eq } from "drizzle-orm";
-import { result } from "@/app/_types/Types";
-import { generateFlashCardsAiModel, generateNotesAiModel, generateQaAiModel, generateQuizAiModel } from "@/configs/AiModel";
+import { generateNotes, generateFlashCards, generateQuiz, generateQa } from "@/configs/AiModel"; // 👈 new imports
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
   { event: "test/hello.world" },
   async ({ event, step }) => {
     await step.sleep("wait-a-moment", "1s");
-    console.log("Function triggered with event:", event);
     return { message: `Asalam u Alikum ${event.data.email}!` };
   },
 );
@@ -19,28 +17,23 @@ export const CreateNewUser = inngest.createFunction(
   { id: 'create-user' },
   { event: 'user.create' },
   async ({ event, step }) => {
-    const { user } = event.data
-    await step.run('Check use and create new if not', async () => {
+    const { user } = event.data;
+    await step.run('Check user and create new if not', async () => {
       if (user?.primaryEmailAddress?.emailAddress && user.fullName) {
-
-        const result = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, user?.primaryEmailAddress?.emailAddress))
+        const result = await db.select().from(USER_TABLE).where(eq(USER_TABLE.email, user.primaryEmailAddress.emailAddress));
         if (result.length === 0) {
-
-          const data = {
+          const userResp = await db.insert(USER_TABLE).values({
             name: user.fullName,
             email: user.primaryEmailAddress.emailAddress,
-          }
-
-          const userResp = await db.insert(USER_TABLE).values(data).returning({ id: USER_TABLE.id })
-
-          return userResp
+          }).returning({ id: USER_TABLE.id });
+          return userResp;
         }
-        return result
+        return result;
       }
-    })
-    return "Success"
+    });
+    return "Success";
   }
-)
+);
 
 export const GenerateNotes = inngest.createFunction(
   { id: 'generate-notes' },
@@ -49,16 +42,13 @@ export const GenerateNotes = inngest.createFunction(
     const { course } = event.data;
     const chapters = course.courseLayout.chapters;
 
-    // Logic: Map chapters to a set of new events and fire them all at once.
-    // This function will finish in milliseconds, avoiding any timeout.
     await step.sendEvent('dispatch-chapter-jobs',
       chapters.map((chapter: any, index: number) => ({
         name: 'chapter.generate.task',
         data: {
-          chapter: chapter,
-          index: index,
+          chapter,
+          index,
           courseId: course.courseId,
-          // We pass the full course object if needed, or just the ID
         }
       }))
     );
@@ -74,18 +64,18 @@ export const GenerateSingleChapterNotes = inngest.createFunction(
     const { chapter, index, courseId } = event.data;
 
     await step.run('Generate Notes via AI', async () => {
-      const PROMPT = `Generate detailed content in JSON format in one line in non readable format...
-      Use the provided chapter details: ${JSON.stringify(chapter)}.`;
+      const PROMPT = `Generate detailed content in JSON format in one line in non readable format, The output should contain an object with a key-value pair chapters, where the chapter is an object. The chapter should include:
+        heading: Main heading of the chapter with given emoji at the end.
+        headingPara: A paragraph explaining the chapter's topic.
+        subheadings: An array of 4 objects, each with:
+        subheading: Title of the subheading.
+        subheadingPara: A short paragraph (up to 1 line if programming, otherwise up to 3 lines).
+        codeBlock: Complete HTML code with proper spaces, styled with: background-color: #f3f4f6 padding: 1.5rem border-radius: 8px font-family: monospace font-size: 14px overflow-x: auto width: 100% margin-bottom: 1.5rem (blank if not programming).
+        Use the provided chapter details: ${JSON.stringify(chapter)}`;
 
-      // Using Gemini 1.5 Flash here is mandatory for speed.
-      const result = await generateNotesAiModel.sendMessage(PROMPT);
-      const rawText = result.response.text();
+      // ✅ Replaced Gemini .sendMessage() with new Groq function
+      const aiResp = await generateNotes(PROMPT);
 
-      // Clean the response: AI sometimes wraps JSON in markdown blocks
-      const cleanJson = rawText.replace(/```json|```/g, "").trim();
-      const aiResp = JSON.parse(cleanJson);
-
-      // Insert into DB
       await db.insert(CHAPTER_NOTES_TABLE).values({
         chapterId: index,
         courseId: courseId,
@@ -98,32 +88,30 @@ export const GenerateSingleChapterNotes = inngest.createFunction(
   }
 );
 
-
-
 export const GenerateStudyTypeContent = inngest.createFunction(
   { id: 'Generate Study Type Content' },
   { event: 'studyType.content' },
-
   async ({ event, step }) => {
-    const { studyType, prompt, recordId } = event.data
+    const { studyType, prompt, recordId } = event.data;
 
+    // 👇 Add this temporarily
+    console.log("GROQ KEY EXISTS:", !!process.env.GROQ_API_KEY);
+    console.log("studyType:", studyType);
+    console.log("recordId:", recordId);
 
-    const AiResult = await step.run('Generating flashcard using Ai', async () => {
-      const result = studyType === 'flashcard' ? await generateFlashCardsAiModel.sendMessage(prompt) : studyType === 'quiz' ? await generateQuizAiModel.sendMessage(prompt) : await generateQaAiModel.sendMessage(prompt)
-      const AIResult = JSON.parse(result.response.text())
-      return AIResult
-    })
-
-    // Save the Result
+    const AiResult = await step.run('Generating content using AI', async () => {
+      // ✅ Replaced Gemini .sendMessage() with new Groq functions
+      if (studyType === 'flashcard') return await generateFlashCards(prompt);
+      if (studyType === 'quiz') return await generateQuiz(prompt);
+      return await generateQa(prompt);
+    });
 
     await step.run('Save Result to DB', async () => {
       await db.update(STUDY_TYPE_CONTENT_TABLE).set({
         content: AiResult,
         status: 'Ready',
-      }).where(eq(STUDY_TYPE_CONTENT_TABLE.id, recordId))
-
+      }).where(eq(STUDY_TYPE_CONTENT_TABLE.id, recordId));
       return 'Data Inserted';
     });
-
   }
-)
+);

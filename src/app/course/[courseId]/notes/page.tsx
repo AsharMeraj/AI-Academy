@@ -9,9 +9,7 @@ const ViewNotes = () => {
     const { courseId } = useParams()
     const [notes, setNotes] = useState<NotesType[]>([])
     const [stepCount, setStepCount] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(true)
-
-    console.log(notes)
+    const [loading, setLoading] = useState<boolean>(true) // 👈 true: fetch on mount
 
     const GetNotes = useCallback(async () => {
         if (!courseId) return;
@@ -20,18 +18,11 @@ const ViewNotes = () => {
         try {
             const response = await fetch('/api/study-type', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    courseId: courseId,
-                    studyType: 'notes'
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ courseId, studyType: 'notes' }),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch notes');
-            }
+            if (!response.ok) throw new Error('Failed to fetch notes');
 
             const data = await response.json();
             setNotes(data.notes || []);
@@ -42,11 +33,11 @@ const ViewNotes = () => {
         }
     }, [courseId]);
 
+    // ✅ Auto-fetch on mount — "View" click is already the user's intent
     useEffect(() => {
         GetNotes();
     }, [GetNotes]);
 
-    // Derived state for better readability
     const currentChapter = notes[stepCount]?.notes?.chapters;
 
     if (loading) {
@@ -69,7 +60,6 @@ const ViewNotes = () => {
 
     return (
         <div className="max-w-4xl mx-auto">
-            {/* Navigation Header */}
             <div className='flex gap-5 items-center bg-white sticky top-0 py-4 z-10 border-b mb-6'>
                 <Button
                     onClick={() => setStepCount(prev => Math.max(0, prev - 1))}
@@ -82,11 +72,11 @@ const ViewNotes = () => {
 
                 <div className="flex flex-1 gap-2">
                     {notes.map((_, index) => (
-                        <div 
-                            key={index} 
+                        <div
+                            key={index}
                             className={`h-2 flex-1 rounded-full transition-all ${
                                 index <= stepCount ? 'bg-primary' : 'bg-gray-200'
-                            }`} 
+                            }`}
                         />
                     ))}
                 </div>
@@ -101,7 +91,6 @@ const ViewNotes = () => {
                 </Button>
             </div>
 
-            {/* Content Area */}
             {currentChapter && (
                 <div className='mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500'>
                     <h1 className='text-3xl md:text-4xl font-extrabold text-black mb-4'>
@@ -110,7 +99,7 @@ const ViewNotes = () => {
                     <p className='p-2 mb-10 text-gray-700 leading-relaxed'>
                         {currentChapter.headingPara}
                     </p>
-                    
+
                     <div className="space-y-12">
                         {currentChapter.subheadings.map((item, index) => (
                             <div key={index} className='group'>
@@ -123,11 +112,11 @@ const ViewNotes = () => {
                                 <p className='p-2 text-gray-600 mb-4 leading-relaxed'>
                                     {item.subheadingPara}
                                 </p>
-                                
+
                                 {item.codeBlock && (
-                                    <div 
+                                    <div
                                         className="rounded-lg shadow-sm"
-                                        dangerouslySetInnerHTML={{ __html: item.codeBlock }} 
+                                        dangerouslySetInnerHTML={{ __html: item.codeBlock }}
                                     />
                                 )}
                             </div>

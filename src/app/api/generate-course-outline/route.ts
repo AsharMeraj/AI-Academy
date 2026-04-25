@@ -1,4 +1,4 @@
-import { courseOutlineAIModel } from "@/configs/AiModel";
+import { generateCourseOutline } from "@/configs/AiModel";
 import { db } from "@/configs/db";
 import { STUDY_MATERIAL_TABLE } from "@/configs/schema";
 import { inngest } from "@/inngest/client";
@@ -8,19 +8,11 @@ export async function POST(req: Request) {
   try {
     const { courseId, topic, courseType, difficultyLevel, createdBy, date } = await req.json();
 
-    const PROMPT = `Generate a study material for ${topic} for ${courseType} and level of difficulty will be ${difficultyLevel} with summary of course, List of chapters (Max 3) along with summary and Emoji for each chapter, Topic list for each chapter. All result in JSON format. Do not include markdown code blocks.`;
+    const PROMPT = `Generate a study material for ${topic} for ${courseType} and level of difficulty will be ${difficultyLevel} with summary of course, List of chapters (Max 3) along with summary and Emoji for each chapter, Topic list for each chapter. All result in JSON format.`;
 
     let aiResult;
     try {
-      // Logic: AI models are volatile. Don't let a 503 kill your entire process.
-      const aiResp = await courseOutlineAIModel.sendMessage(PROMPT);
-      let rawText = aiResp.response.text();
-
-      // CLEANING: Remove potential Markdown formatting (```json ... ```) 
-      // which Gemini frequently adds and causes JSON.parse to fail.
-      const cleanJson = rawText.replace(/```json|```/g, "").trim();
-      aiResult = JSON.parse(cleanJson);
-      
+      aiResult = await generateCourseOutline(PROMPT);
     } catch (aiError: any) {
       console.error("AI Generation Error:", aiError);
       return NextResponse.json(
@@ -29,8 +21,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Save data to the database
-    // Note: If this fails, you have a DB connection issue in Karachi/Region.
     const dbResult = await db.insert(STUDY_MATERIAL_TABLE).values({
       courseId,
       courseType,
@@ -42,15 +32,8 @@ export async function POST(req: Request) {
     }).returning();
 
     if (!dbResult || dbResult.length === 0) {
-        throw new Error("Database insertion failed.");
+      throw new Error("Database insertion failed.");
     }
-
-    // Trigger Inngest event
-    // This is good—you're offloading the heavy "Note Generation" to a background job.
-    await inngest.send({
-      name: "notes.generate",
-      data: { course: dbResult[0] },
-    });
 
     return NextResponse.json({ result: dbResult[0] });
 

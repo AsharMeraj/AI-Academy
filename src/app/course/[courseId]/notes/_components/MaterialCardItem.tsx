@@ -1,14 +1,14 @@
 'use client';
 import { Notes, result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
-import { db } from '@/configs/db';
-import { CHAPTER_NOTES_TABLE, STUDY_TYPE_CONTENT_TABLE } from '@/configs/schema';
+import { STUDY_TYPE_CONTENT_TABLE, CHAPTER_NOTES_TABLE } from '@/configs/schema';
 import { and, eq } from 'drizzle-orm';
 import { RefreshCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react'; // 👈 removed useEffect, useCallback
 import { toast } from 'react-toastify';
+import { db } from '@/configs/db';
 
 export interface ContentType {
   name: string;
@@ -30,34 +30,7 @@ export interface PropType {
 const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Use useCallback to prevent unnecessary re-renders of the polling logic
-  const checkNotesStatus = useCallback(async () => {
-    const result = await db
-      .select()
-      .from(CHAPTER_NOTES_TABLE)
-      .where(
-        and(
-          eq(CHAPTER_NOTES_TABLE.courseId, props.course.courseId),
-          eq(CHAPTER_NOTES_TABLE.status, 'Ready')
-        )
-      );
-
-    if (result.length === props.course.courseLayout.chapters.length) {
-      await props.refreshData();
-      setLoading(false);
-    } else {
-      // Logic: Safe polling every 2 seconds
-      setTimeout(() => checkNotesStatus(), 2000);
-    }
-  }, [props.course.courseId, props.course.courseLayout.chapters.length, props.refreshData]);
-
-  useEffect(() => {
-    const currentNotesLength = props.studyTypeContent?.notes?.length || 0;
-    if (props.item.type === 'notes' && currentNotesLength < props.course.courseLayout.chapters.length) {
-      setLoading(true);
-      checkNotesStatus();
-    }
-  }, [props.studyTypeContent?.notes?.length, props.item.type, props.course.courseLayout.chapters.length, checkNotesStatus]);
+  // ✅ Removed the useEffect + checkNotesStatus that was auto-triggering on mount
 
   const GenerateContent = async () => {
     setLoading(true);
@@ -66,7 +39,6 @@ const MaterialCardItem = (props: PropType) => {
       .join(',');
 
     try {
-      // 1. Native Fetch replaces Axios
       const response = await fetch('/api/study-type-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,30 +46,39 @@ const MaterialCardItem = (props: PropType) => {
           courseId: props.course.courseId,
           type: props.item.type,
           chapters,
+          course: props.course, // 👈 add this — needed for notes.generate event
         }),
       });
 
       if (!response.ok) throw new Error('Generation failed to start');
 
-      // 2. Safe recursive polling with setTimeout
+      // Poll DB until content is ready
       const pollForContent = async () => {
+        const targetTable = props.item.type === 'notes' ? CHAPTER_NOTES_TABLE : STUDY_TYPE_CONTENT_TABLE;
+
         const rows = await db
           .select()
-          .from(STUDY_TYPE_CONTENT_TABLE)
+          .from(targetTable as any)
           .where(
             and(
-              eq(STUDY_TYPE_CONTENT_TABLE.courseId, props.course.courseId),
-              eq(STUDY_TYPE_CONTENT_TABLE.status, 'Ready'),
-              eq(STUDY_TYPE_CONTENT_TABLE.type, props.item.type) // Explicitly check type
+              eq((targetTable as any).courseId, props.course.courseId),
+              eq((targetTable as any).status, 'Ready'),
+              props.item.type !== 'notes'
+                ? eq((targetTable as any).type, props.item.type)
+                : undefined
             )
           );
 
-        if (rows.length > 0) {
+        const isReady = props.item.type === 'notes'
+          ? rows.length === props.course.courseLayout.chapters.length
+          : rows.length > 0;
+
+        if (isReady) {
           await props.refreshData();
           setLoading(false);
           toast.success(`${props.item.name} ready!`);
         } else {
-          setTimeout(pollForContent, 3000); // Check every 3 seconds
+          setTimeout(pollForContent, 3000);
         }
       };
 
@@ -112,7 +93,7 @@ const MaterialCardItem = (props: PropType) => {
   const isMissingContent = () => {
     const type = props.item.type as keyof Notes;
     const content = props.studyTypeContent?.[type];
-    
+
     if (props.item.type === 'notes') {
       return (content?.length || 0) < props.course.courseLayout.chapters.length;
     }
@@ -120,15 +101,11 @@ const MaterialCardItem = (props: PropType) => {
   };
 
   return (
-    <div
-      className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${
-        isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
-      }`}
-    >
+    <div className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
+      }`}>
       <div className="w-full flex justify-end">
-        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-          isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
-        }`}>
+        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
+          }`}>
           {isMissingContent() ? 'Generate' : 'Ready'}
         </h2>
       </div>
@@ -157,9 +134,7 @@ const MaterialCardItem = (props: PropType) => {
         </Button>
       ) : (
         <Link href={`/course/${props.course.courseId}/${props.item.path}`} className="w-full mt-auto">
-          <Button className="w-full" variant="outline">
-            View
-          </Button>
+          <Button className="w-full" variant="outline">View</Button>
         </Link>
       )}
     </div>
