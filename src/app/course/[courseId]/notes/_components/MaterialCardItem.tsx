@@ -46,14 +46,23 @@ const MaterialCardItem = (props: PropType) => {
           courseId: props.course.courseId,
           type: props.item.type,
           chapters,
-          course: props.course, // 👈 add this — needed for notes.generate event
+          course: props.course,
         }),
       });
 
       if (!response.ok) throw new Error('Generation failed to start');
 
-      // Poll DB until content is ready
+      let retries = 0;
+      const MAX_RETRIES = 20; // 👈 stop after 60 seconds (20 x 3s)
+
       const pollForContent = async () => {
+        if (retries >= MAX_RETRIES) {
+          setLoading(false);
+          toast.error("Generation timed out. Please try again.");
+          return;
+        }
+        retries++;
+
         const targetTable = props.item.type === 'notes' ? CHAPTER_NOTES_TABLE : STUDY_TYPE_CONTENT_TABLE;
 
         const rows = await db
