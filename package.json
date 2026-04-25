@@ -39,7 +39,8 @@
     "stripe": "^17.5.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^20",
