@@ -17,8 +17,10 @@ const QuestionAnswers = () => {
   const [checkOpen, setCheckOpen] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
 
-  const GetQa = useCallback(async () => {
+  const GetQa = useCallback(async (retries = 0) => {
     if (!courseId) return;
+
+    const MAX_RETRIES = 20;
 
     try {
       const response = await fetch('/api/study-type', {
@@ -33,11 +35,14 @@ const QuestionAnswers = () => {
       const record = data.qa;
 
       if (record?.status === 'Generating' || !record?.content) {
-        setTimeout(() => GetQa(), 3000);
+        if (retries >= MAX_RETRIES) {
+          setLoading(false); // give up after 60s
+          return;
+        }
+        setTimeout(() => GetQa(retries + 1), 3000);
         return;
       }
 
-      // ✅ Handle both direct array and nested object
       const content = record?.content;
       const qaArray = Array.isArray(content)
         ? content
@@ -45,6 +50,7 @@ const QuestionAnswers = () => {
           ? content.qa
           : [];
 
+      console.log("QA content:", content); // remove after confirmed
       setQaResult(qaArray);
       setLoading(false);
     } catch (error) {
@@ -64,9 +70,10 @@ const QuestionAnswers = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64">
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Loader2 className="animate-spin text-primary w-10 h-10" />
         <p className="text-gray-500 mt-2">Loading practice questions...</p>
+        <p className="text-gray-400 text-sm">This may take a moment if content is still generating</p>
       </div>
     );
   }
