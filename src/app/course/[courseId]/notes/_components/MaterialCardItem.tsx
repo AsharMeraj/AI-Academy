@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { RefreshCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState } from 'react'; // 👈 removed useEffect, useCallback
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { db } from '@/configs/db';
 
@@ -20,17 +20,33 @@ export interface ContentType {
 
 export interface PropType {
   item: ContentType;
-  studyTypeContent: Notes;
+  studyTypeContent: Notes | null; // 👈 allow null
   course: result;
   refreshData: () => Promise<void>;
   setNotesLoading: React.Dispatch<React.SetStateAction<boolean>>;
   notesLoading: boolean;
 }
 
+// ✅ Skeleton component
+const MaterialCardSkeleton = () => (
+  <div className="border shadow-sm rounded-xl p-5 flex flex-col items-center bg-white animate-pulse">
+    <div className="w-full flex justify-end">
+      <div className="h-4 w-14 bg-gray-200 rounded-full" />
+    </div>
+    <div className="my-3 w-10 h-10 bg-gray-200 rounded-full" />
+    <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
+    <div className="h-3 w-32 bg-gray-100 rounded mb-4" />
+    <div className="mt-auto w-full h-9 bg-gray-200 rounded-lg" />
+  </div>
+);
+
 const MaterialCardItem = (props: PropType) => {
   const [loading, setLoading] = useState<boolean>(false);
 
-  // ✅ Removed the useEffect + checkNotesStatus that was auto-triggering on mount
+  // ✅ Show skeleton while studyTypeContent hasn't loaded yet
+  if (props.studyTypeContent === null) {
+    return <MaterialCardSkeleton />;
+  }
 
   const GenerateContent = async () => {
     setLoading(true);
@@ -53,7 +69,7 @@ const MaterialCardItem = (props: PropType) => {
       if (!response.ok) throw new Error('Generation failed to start');
 
       let retries = 0;
-      const MAX_RETRIES = 20; // 👈 stop after 60 seconds (20 x 3s)
+      const MAX_RETRIES = 20;
 
       const pollForContent = async () => {
         if (retries >= MAX_RETRIES) {
@@ -102,7 +118,6 @@ const MaterialCardItem = (props: PropType) => {
   const isMissingContent = () => {
     const type = props.item.type as keyof Notes;
     const content = props.studyTypeContent?.[type];
-
     if (props.item.type === 'notes') {
       return (content?.length || 0) < props.course.courseLayout.chapters.length;
     }
@@ -110,11 +125,13 @@ const MaterialCardItem = (props: PropType) => {
   };
 
   return (
-    <div className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
-      }`}>
+    <div className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${
+      isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
+    }`}>
       <div className="w-full flex justify-end">
-        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
-          }`}>
+        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+          isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
+        }`}>
           {isMissingContent() ? 'Generate' : 'Ready'}
         </h2>
       </div>

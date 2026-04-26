@@ -97,7 +97,7 @@ const StudyMaterialSection = ({ course }: { course: result }) => {
                         refreshData={GetStudyNotes}
                         course={course}
                         // Safely pass the data. If it's null, pass null. Don't pass undefined properties.
-                        studyTypeContent={studyTypeContent?.result as any} 
+                        studyTypeContent={studyTypeContent?.result as any ?? null}
                         key={index}
                         item={item}
                     />
