@@ -1,14 +1,11 @@
 'use client';
 import { Notes, result } from '@/app/_types/Types';
 import { Button } from '@/components/ui/button';
-import { STUDY_TYPE_CONTENT_TABLE, CHAPTER_NOTES_TABLE } from '@/configs/schema';
-import { and, eq } from 'drizzle-orm';
 import { RefreshCcw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { db } from '@/configs/db';
 
 export interface ContentType {
   name: string;
@@ -79,24 +76,23 @@ const MaterialCardItem = (props: PropType) => {
         }
         retries++;
 
-        const targetTable = props.item.type === 'notes' ? CHAPTER_NOTES_TABLE : STUDY_TYPE_CONTENT_TABLE;
+        // ✅ Use API instead of direct DB call
+        const response = await fetch('/api/study-type', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseId: props.course.courseId,
+            studyType: 'ALL',
+          }),
+        });
 
-        const rows = await db
-          .select()
-          .from(targetTable as any)
-          .where(
-            and(
-              eq((targetTable as any).courseId, props.course.courseId),
-              eq((targetTable as any).status, 'Ready'),
-              props.item.type !== 'notes'
-                ? eq((targetTable as any).type, props.item.type)
-                : undefined
-            )
-          );
+        const data = await response.json();
+        const result = data.result;
 
         const isReady = props.item.type === 'notes'
-          ? rows.length === props.course.courseLayout.chapters.length
-          : rows.length > 0;
+          ? (result?.notes?.length || 0) >= props.course.courseLayout.chapters.length
+          : (result?.[props.item.type]?.length || 0) > 0 &&
+          result?.[props.item.type]?.[0]?.status === 'Ready';
 
         if (isReady) {
           await props.refreshData();
@@ -125,13 +121,11 @@ const MaterialCardItem = (props: PropType) => {
   };
 
   return (
-    <div className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${
-      isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
-    }`}>
+    <div className={`border shadow-sm rounded-xl p-5 flex flex-col items-center transition-all ${isMissingContent() ? 'grayscale bg-gray-50' : 'bg-white'
+      }`}>
       <div className="w-full flex justify-end">
-        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-          isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
-        }`}>
+        <h2 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${isMissingContent() ? 'bg-gray-200 text-gray-500' : 'bg-green-100 text-green-700'
+          }`}>
           {isMissingContent() ? 'Generate' : 'Ready'}
         </h2>
       </div>
